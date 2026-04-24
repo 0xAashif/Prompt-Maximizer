@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="FCM Prompt Generator — Convert raw ideas into production-grade AI prompts">
+<title>FCM Prompt Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: linear-gradient(135deg, #0b0d1f 0%, #111427 100%); --bg2: rgba(18,24,50,0.85); --bg3: rgba(22,29,58,0.9); --bg4: rgba(32,42,77,0.95);
+    --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+    --text: #eef2ff; --text2: #b8c1ff; --text3: #8b96b8;
+    --accent: linear-gradient(135deg, #7c5cff 0%, #a855f7 100%); --accent-dim: rgba(124,92,255,0.18); --accent-border: rgba(124,92,255,0.3);
+    --green: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%); --green-dim: rgba(34,211,238,0.15);
+    --red: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%); --red-dim: rgba(251,113,133,0.15);
+    --blue: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); --blue-dim: rgba(96,165,250,0.18);
+    --radius-sm: 10px; --radius: 16px; --radius-lg: 22px; --radius-xl: 32px;
+    --shadow: 0 20px 60px rgba(0,0,0,0.3); --shadow-sm: 0 12px 32px rgba(0,0,0,0.2);
+    --font: 'Sora', sans-serif; --mono: 'DM Mono', monospace;
+    --transition: 0.25s cubic-bezier(0.4,0,0.2,1); --sidebar-w: 320px;
+  }
+  [data-theme="light"] {
+    --bg: #f7f6f3; --bg2: #ffffff; --bg3: #f0efe9; --bg4: #e8e7e0;
+    --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14);
+    --text: #1a1918; --text2: #6b6a72; --text3: #a8a7b0;
+    --accent: #d4920c; --accent-dim: rgba(212,146,12,0.1); --accent-border: rgba(212,146,12,0.25);
+    --green: #059669; --green-dim: rgba(5,150,105,0.1);
+    --red: #dc2626; --red-dim: rgba(220,38,38,0.1);
+    --blue: #2563eb; --blue-dim: rgba(37,99,235,0.1);
+    --shadow: 0 4px 24px rgba(0,0,0,0.1); --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --text: #e6e6e6;
+    --accent: #ffffff;
+  }
+  [data-theme="light"] {
+    --bg: #f5f5f5;
+    --card: #ffffff;
+    --text: #111;
+    --accent: #000;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+  }
+  button, .chip.active {
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 8px rgba(255,255,255,0.6);
+  }
+  .gen-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.06);
+    color: var(--text2);
+    font-size: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100dvh; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .app-shell { display: flex; min-height: 100dvh; }
+  .sidebar { width: var(--sidebar-w); background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transform: translateX(-100%); transition: transform var(--transition); overflow: hidden; }
+  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow); }
+  .sidebar-header { padding: 20px 16px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .sidebar-title { font-size: 13px; font-weight: 500; color: var(--text2); letter-spacing: 0.06em; text-transform: uppercase; }
+  .sidebar-close { width: 28px; height: 28px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all var(--transition); }
+  .sidebar-close:hover { background: var(--bg3); color: var(--text); }
+  .sidebar-list { flex: 1; overflow-y: auto; padding: 12px 10px; }
+  .sidebar-list::-webkit-scrollbar { width: 3px; }
+  .sidebar-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  .history-empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; line-height: 1.7; }
+  .hist-item { padding: 10px 12px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; margin-bottom: 6px; transition: all var(--transition); position: relative; }
+  .hist-item:hover { background: var(--bg3); border-color: var(--border); }
+  .hist-item-meta { font-size: 11px; color: var(--text3); margin-bottom: 4px; display: flex; gap: 6px; align-items: center; }
+  .hist-item-text { font-size: 12px; color: var(--text2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hist-chip { font-size: 10px; padding: 1px 6px; border-radius: 99px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
+  .hist-del { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; background: none; border: none; color: var(--text3); cursor: pointer; border-radius: 4px; font-size: 12px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--transition), background var(--transition); }
+  .hist-item:hover .hist-del { opacity: 1; }
+  .hist-del:hover { background: var(--red-dim); color: var(--red); }
+  .sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .clear-btn { width: 100%; padding: 8px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); font-family: var(--font); font-size: 12px; cursor: pointer; transition: all var(--transition); }
+  .clear-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; backdrop-filter: blur(2px); }
+  .overlay.show { display: block; }
+  .main { flex: 1; display: flex; flex-direction: column; min-height: 100dvh; }
+  .topbar { position: sticky; top: 0; z-index: 30; background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .menu-btn { width: 36px; height: 36px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; transition: all var(--transition); flex-shrink: 0; }
+  .menu-btn:hover { border-color: var(--border2); color: var(--text); }
+  .menu-btn span { display: block; width: 14px; height: 1.5px; background: currentColor; border-radius: 2px; }
+  .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .logo-mark { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo-mark svg { width: 16px; height: 16px; fill: #0c0c0e; }
+  .logo-text { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .logo-badge { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 99px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); letter-spacing: 0.04em; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .icon-btn { width: 36px; height: 36px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .icon-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .content { flex: 1; padding: 24px 20px 40px; max-width: 760px; margin: 0 auto; width: 100%; }
+  .hero { margin-bottom: 28px; }
+  .hero-eyebrow { font-size: 11px; font-family: var(--mono); color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .hero-eyebrow::before { content: ''; display: block; width: 16px; height: 1px; background: var(--accent); }
+  .hero h1 { font-size: clamp(24px, 5vw, 32px); font-weight: 700; color: var(--text); letter-spacing: -0.03em; line-height: 1.25; margin-bottom: 8px; }
+  .hero p { font-size: 16px; color: var(--text2); max-width: 520px; line-height: 1.7; }
+  .card { background: rgba(18,24,50,0.8); border: 1px solid rgba(124,92,255,0.15); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow-sm); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition); }
+  .card:hover { transform: translateY(-1px); border-color: rgba(124,92,255,0.2); box-shadow: 0 20px 45px rgba(0,0,0,0.16); }
+  .card:focus-within { border-color: var(--border2); }
+  .label { font-size: 11px; font-weight: 600; font-family: var(--mono); color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .char-count { font-size: 11px; color: var(--text3); transition: color var(--transition); }
+  .char-count.warn { color: var(--accent); }
+  .prompt-card { display: none; background: rgba(22,29,58,0.85); border: 1px solid rgba(124,92,255,0.18); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow-sm); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition); }
+  .prompt-card.active { display: block; animation: fadeInUp 0.5s ease-out; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .prompt-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .prompt-card-title { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
+  .copy-ai-btn { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; transition: all var(--transition); }
+  .copy-ai-btn:hover { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+  .prompt-box { background: rgba(7,11,24,0.9); border: 1px solid rgba(124,92,255,0.12); border-radius: var(--radius-lg); padding: 18px; font-family: var(--mono); font-size: 13px; color: var(--text2); line-height: 1.85; white-space: pre-wrap; word-break: break-word; max-height: 460px; overflow-y: auto; position: relative; }
+  .prompt-box::-webkit-scrollbar { width: 4px; }
+  .prompt-box::-webkit-scrollbar-thumb { background: rgba(124,92,255,0.25); border-radius: 999px; }
+  .ai-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .ai-tab { padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text2); cursor: pointer; font-size: 12px; transition: all var(--transition); }
+  .ai-tab.active { background: rgba(124,92,255,0.16); border-color: rgba(124,92,255,0.25); color: var(--accent); }
+  .ai-tab:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+  .prompt-container { margin-bottom: 16px; }
+  .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .output-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .status-dot.pulsing { animation: pulse 1.4s ease-in-out infinite; }
+  .action-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .act-btn { font-size: 12px; padding: 11px 14px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text2); cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 8px; transition: all var(--transition); white-space: nowrap; }
+  .act-btn:hover { border-color: rgba(124,92,255,0.2); color: var(--text); background: rgba(124,92,255,0.12); }
+  .act-btn.primary { border-color: rgba(124,92,255,0.3); color: var(--accent); background: rgba(124,92,255,0.14); }
+  .act-btn.primary:hover { background: var(--accent); color: #0c0c0e; }
+  .gen-btn { width: 100%; padding: 16px 20px; background: linear-gradient(135deg, rgba(124,92,255,0.95), rgba(84,109,255,0.95)); border: none; border-radius: var(--radius-lg); font-family: var(--font); font-size: 15px; font-weight: 700; color: #eef2ff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform var(--transition), box-shadow var(--transition), background var(--transition); }
+  .gen-btn:hover { transform: translateY(-1px); box-shadow: 0 20px 40px rgba(124,92,255,0.18); }
+  .gen-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
+  .gen-btn::before { opacity: 0; }
+  .icon-btn { min-width: 46px; min-height: 46px; border-radius: 16px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text2); display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .icon-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(124,92,255,0.16); color: var(--text); }
+  .icon-btn span { font-size: 18px; line-height: 1; }
+  .topbar { position: sticky; top: 0; z-index: 30; background: rgba(11,14,30,0.8); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+  .content { flex: 1; padding: 28px 24px 46px; max-width: 900px; margin: 0 auto; width: 100%; }
+  .hero p { font-size: 15px; color: var(--text2); max-width: 560px; line-height: 1.75; }
+  .card { padding: 22px; }
+
+  textarea { width: 100%; min-height: 100px; max-height: 280px; resize: vertical; border: none; outline: none; background: transparent; font-family: var(--font); font-size: 14px; color: var(--text); line-height: 1.7; caret-color: var(--accent); }
+  textarea::placeholder { color: var(--text3); }
+  textarea::-webkit-scrollbar { width: 3px; }
+  textarea::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 500px) { .controls-grid { grid-template-columns: 1fr; } }
+  .ctrl-group { display: flex; flex-direction: column; gap: 8px; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; font-family: var(--font); transition: all var(--transition); white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+  .chip:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+  .chip.active { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); font-weight: 500; }
+  .chip-icon { font-size: 13px; line-height: 1; }
+  .level-chip { flex: 1; justify-content: center; text-align: center; border-radius: var(--radius-sm); }
+  .ex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .ex-card { padding: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all var(--transition); }
+  .ex-card:hover { border-color: var(--accent-border); background: var(--accent-dim); transform: translateY(-1px); }
+  .ex-tag { font-size: 10px; font-family: var(--mono); color: var(--accent); margin-bottom: 5px; font-weight: 500; letter-spacing: 0.04em; }
+  .ex-title { font-size: 12px; color: var(--text2); line-height: 1.45; }
+  .ai-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+  .ai-tab { padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; font-size: 12px; font-family: var(--font); transition: all var(--transition); }
+  .ai-tab.active { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); font-weight: 500; }
+  .ai-tab:hover { border-color: var(--border2); color: var(--text); }
+  .prompt-container { margin-bottom: 12px; }
+  .ai-prompt { display: none; }
+  .ai-prompt.active { display: block; }
+  .kbd-hint { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
+  kbd { font-size: 10px; font-family: var(--mono); padding: 1px 5px; border: 1px solid var(--border2); border-radius: 4px; color: var(--text3); }
+  .gen-btn { width: 100%; padding: 14px 20px; background: var(--accent); border: none; border-radius: var(--radius); font-family: var(--font); font-size: 14px; font-weight: 600; color: #0c0c0e; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all var(--transition); position: relative; overflow: hidden; letter-spacing: -0.01em; }
+  .gen-btn::before { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.15); opacity: 0; transition: opacity var(--transition); }
+  .gen-btn:hover::before { opacity: 1; }
+  .gen-btn:active { transform: scale(0.99); }
+  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .gen-btn:disabled::before { opacity: 0; }
+  .btn-icon { width: 18px; height: 18px; flex-shrink: 0; }
+  .btn-icon svg { width: 100%; height: 100%; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(12,12,14,0.3); border-top-color: #0c0c0e; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+
+  /* FIX #1: error-box — single display declaration, uses .hidden to toggle off */
+  .error-box { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px; background: var(--red-dim); border: 1px solid rgba(248,113,113,0.2); border-radius: var(--radius); color: var(--red); font-size: 13px; margin-top: 10px; }
+  .error-box.hidden { display: none; }
+
+  .output-panel { display: none; margin-top: 14px; }
+  .output-panel.visible { display: block; animation: fadeSlideUp 0.4s ease-out; }
+  @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* FIX #2: flex-wrap: gap → flex-wrap: wrap */
+  .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+
+  .output-title { font-size: 13px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .status-dot.pulsing { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .meta-chip { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 99px; background: var(--bg3); color: var(--text3); border: 1px solid var(--border); letter-spacing: 0.03em; }
+  .prompt-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; font-family: var(--mono); font-size: 13px; color: var(--text2); line-height: 1.8; white-space: pre-wrap; word-break: break-word; max-height: 440px; overflow-y: auto; position: relative; }
+  .prompt-box::-webkit-scrollbar { width: 3px; }
+  .prompt-box::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  .prompt-box .section-head { color: var(--accent); font-weight: 500; }
+  .cursor-blink { display: inline-block; width: 2px; height: 14px; background: var(--accent); animation: blink 0.8s step-end infinite; vertical-align: middle; margin-left: 1px; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+  .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .act-btn { font-size: 12px; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg2); color: var(--text2); cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 6px; transition: all var(--transition); white-space: nowrap; }
+  .act-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+  .act-btn.primary { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+  .act-btn.primary:hover { background: var(--accent); color: #0c0c0e; border-color: var(--accent); font-weight: 500; }
+  .act-btn svg { width: 14px; height: 14px; }
+  .section-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 16px; background: var(--bg3); border-radius: 0 0 var(--radius) var(--radius); border: 1px solid var(--border); border-top: none; margin-top: -2px; }
+  .sec-pill { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 99px; background: var(--bg4); color: var(--text3); border: 1px solid var(--border); }
+  .progress-bar { height: 2px; background: var(--bg4); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width 0.3s ease; }
+  .footer { padding: 20px; text-align: center; border-top: 1px solid var(--border); }
+  .footer p { font-size: 11px; font-family: var(--mono); color: var(--text3); }
+  @media (max-width: 640px) { .topbar { padding: 0 14px; } .content { padding: 16px 14px 32px; } .hero h1 { font-size: 20px; } .card { padding: 16px; } .action-row { gap: 6px; } .act-btn { font-size: 11px; padding: 7px 11px; } .gen-btn { padding: 13px; font-size: 13px; } }
+  @media (min-width: 900px) { .content { padding: 32px 40px 60px; } .hero { margin-bottom: 36px; } .hero h1 { font-size: 34px; } }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--bg2); border: 1px solid var(--border2); padding: 10px 20px; border-radius: var(--radius); font-size: 13px; color: var(--text); font-family: var(--font); box-shadow: var(--shadow); z-index: 100; transition: transform 0.25s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.25s; opacity: 0; pointer-events: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  ::selection { background: var(--accent-dim); color: var(--accent); }
+  .hl-section { color: var(--accent); font-weight: 500; }
+  .hl-num { color: var(--blue); }
+</style>
+</head>
+<body>
+
+<div id="overlay" class="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar" aria-label="Prompt history">
+  <div class="sidebar-header">
+    <span class="sidebar-title">History</span>
+    <button class="sidebar-close" onclick="closeSidebar()" aria-label="Close history">✕</button>
+  </div>
+  <div class="sidebar-list" id="historyList">
+    <div class="history-empty" id="historyEmpty">No prompts generated yet.<br>Your history will appear here.</div>
+  </div>
+  <div class="sidebar-footer">
+    <button class="clear-btn" onclick="clearHistory()">Clear all history</button>
+  </div>
+</aside>
+
+<div class="app-shell">
+  <main class="main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-btn" id="menuBtn" aria-label="Toggle history">
+          <span></span><span></span><span></span>
+        </button>
+        <a href="#" class="logo" aria-label="FCM Prompt Generator">
+          <div class="logo-mark">
+            <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 3h5v2H4v2h3v2H4v4H2V3zm7 0h5l-2 5 2 5h-5V3zm2 2v6h1.5l-1.5-3 1.5-3H11z"/>
+            </svg>
+          </div>
+          <span class="logo-text">PromptGen</span>
+          <span class="logo-badge">FCM</span>
+        </a>
+      </div>
+      <div class="topbar-right">
+          <button class="icon-btn" id="themeBtn" aria-label="Toggle theme" title="Toggle theme">🌙</button>
+        <span class="gen-count" id="genCount" aria-label="Generation count">0</span>
+        <button class="icon-btn" onclick="toggleSidebar()" aria-label="History" title="Prompt history">
+          <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="hero">
+        <div class="hero-eyebrow">Full Capability Mode</div>
+        <h1>Prompt Architecture<br>Engine</h1>
+        <p>Transform any raw idea into a structured, production-grade AI prompt. 8-section FCM architecture. Zero hallucination.</p>
+      </div>
+
+      <div class="card">
+        <div class="label">
+          <span>01 — Raw input</span>
+          <span class="char-count" id="charCount">0 / 800</span>
+        </div>
+        <textarea id="rawInput" maxlength="800" placeholder="Describe what you want to achieve. Be as rough as you want — the engine will structure it..." aria-label="Raw input"></textarea>
+      </div>
+
+      <div class="card controls-grid">
+        <div class="ctrl-group">
+          <div class="label"><span>02 — Domain</span></div>
+          <div class="chip-row" id="domainGroup" role="group" aria-label="Select domain">
+            <button class="chip active" data-val="Coding"><span class="chip-icon">⌨</span>Coding</button>
+            <button class="chip" data-val="Writing"><span class="chip-icon">✍</span>Writing</button>
+            <button class="chip" data-val="Design"><span class="chip-icon">◈</span>Design</button>
+            <button class="chip" data-val="Business"><span class="chip-icon">◎</span>Business</button>
+            <button class="chip" data-val="Cybersecurity"><span class="chip-icon">⬡</span>Cybersecurity</button>
+            <button class="chip" data-val="Blockchain"><span class="chip-icon">◆</span>Blockchain</button>
+            <button class="chip" data-val="Research"><span class="chip-icon">◉</span>Research</button>
+            <button class="chip" data-val="Problem-Solving"><span class="chip-icon">⊕</span>Problem-Solving</button>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <div class="label"><span>03 — Complexity</span></div>
+          <div class="chip-row" id="levelGroup" role="group" aria-label="Select complexity">
+            <button class="chip level-chip" data-val="Beginner">Beginner</button>
+            <button class="chip level-chip active" data-val="Professional">Professional</button>
+            <button class="chip level-chip" data-val="Expert">Expert</button>
+          </div>
+          <div class="label" style="margin-top:14px;"><span>04 — Token limit</span></div>
+          <div class="chip-row" id="tokenGroup" role="group" aria-label="Select token limit">
+            <button class="chip" data-val="600">Short</button>
+            <button class="chip active" data-val="1000">Standard</button>
+            <button class="chip" data-val="1500">Extended</button>
+          </div>
+          <div class="label" style="margin-top:14px;"><span>05 — Target AIs</span></div>
+          <div class="chip-row" id="aiGroup" role="group" aria-label="Select target AIs">
+            <button class="chip active" data-val="Claude"><span class="chip-icon">🤖</span>Claude</button>
+            <button class="chip active" data-val="ChatGPT"><span class="chip-icon">💬</span>ChatGPT</button>
+            <button class="chip" data-val="Gemini"><span class="chip-icon">🌟</span>Gemini</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label"><span>06 — Quick examples</span></div>
+        <div class="ex-grid" id="exGrid">
+          <div class="ex-card" data-domain="Coding" data-level="Professional" data-tokens="1000" data-input="Build a REST API in Python Flask with JWT authentication and PostgreSQL for a todo app with full CRUD">
+            <div class="ex-tag">CODING</div>
+            <div class="ex-title">Flask REST API + JWT auth</div>
+          </div>
+          <div class="ex-card" data-domain="Writing" data-level="Professional" data-tokens="1000" data-input="Write a compelling LinkedIn post announcing my first job as a software developer after completing my BTech">
+            <div class="ex-tag">WRITING</div>
+            <div class="ex-title">LinkedIn job announcement</div>
+          </div>
+          <div class="ex-card" data-domain="Cybersecurity" data-level="Expert" data-tokens="1500" data-input="Perform a penetration testing methodology for a web application focusing on OWASP Top 10 vulnerabilities">
+            <div class="ex-tag">CYBERSECURITY</div>
+            <div class="ex-title">Web app pentest methodology</div>
+          </div>
+          <div class="ex-card" data-domain="Blockchain" data-level="Expert" data-tokens="1500" data-input="Audit a Solidity smart contract for common vulnerabilities like reentrancy, integer overflow, and access control issues">
+            <div class="ex-tag">BLOCKCHAIN</div>
+            <div class="ex-title">Smart contract security audit</div>
+          </div>
+          <div class="ex-card" data-domain="Problem-Solving" data-level="Expert" data-tokens="1000" data-input="Diagnose and fix memory leaks in a Node.js Express application running under heavy production load">
+            <div class="ex-tag">PROBLEM-SOLVING</div>
+            <div class="ex-title">Node.js memory leak debug</div>
+          </div>
+          <div class="ex-card" data-domain="Research" data-level="Professional" data-tokens="1000" data-input="Explain how transformer architecture works in large language models and what makes attention mechanisms powerful">
+            <div class="ex-tag">RESEARCH</div>
+            <div class="ex-title">Transformer LLM architecture</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div class="kbd-hint">
+          <kbd>Ctrl</kbd><span>+</span><kbd>Enter</kbd><span style="color:var(--text3);"> to generate</span>
+        </div>
+      </div>
+
+      <button class="gen-btn" id="genBtn" aria-label="Generate optimized prompt">
+        <div class="btn-icon">
+          <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        Generate Optimized Prompt
+      </button>
+
+      <div class="error-box hidden" id="errorBox" role="alert">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink:0;margin-top:1px"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+        <span id="errorMsg"></span>
+      </div>
+
+      <div class="output-panel" id="outputPanel">
+        <div class="output-header">
+          <div class="output-title">
+            <div class="status-dot" id="statusDot"></div>
+            Generated prompts
+          </div>
+          <div class="meta-chips" id="metaChips"></div>
+        </div>
+        <div class="ai-tabs" id="aiTabs"></div>
+        <div class="prompt-container" id="promptContainer"></div>
+        <div class="section-list" id="sectionList"></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="action-row">
+          <button class="act-btn primary" id="copyBtn">
+            <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+            Copy prompt
+          </button>
+          <button class="act-btn" id="downloadBtn">
+            <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            Download .txt
+          </button>
+          <button class="act-btn" id="regenerateBtn">
+            <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+            Regenerate
+          </button>
+          <!-- FIX #5: shareToChat now sends the actual generated prompt -->
+          <button class="act-btn" id="useChatBtn">
+            <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zM8 9a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1H9a1 1 0 01-1-1V9zm1-4a1 1 0 100 2 1 1 0 000-2z"/></svg>
+            Use in chat
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>FCM Prompt Generator · Built by Aashif Khan ·️©️2026 All Right Reserved</p>
+    </footer>
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Copied!</span>
+</div>
+
+<script>
+  const HISTORY_KEY = 'fcm_history';
+  const THEME_KEY = 'fcm_theme';
+  const COUNT_KEY = 'fcm_count';
+
+  let selectedDomain = 'Coding';
+  let selectedLevel = 'Professional';
+  let selectedTokens = 1000;
+  let selectedAIs = ['Claude', 'ChatGPT'];
+  let isGenerating = false;
+  let lastPrompts = {};
+  let genCount = parseInt(localStorage.getItem(COUNT_KEY) || '0', 10);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+    document.getElementById('genCount').textContent = genCount;
+    renderHistory();
+    initChipGroups();
+    initExamples();
+    initTextarea();
+    initButtons();
+    initKeyboard();
+  });
+
+  function detectDomain(input) {
+    const lowerInput = input.toLowerCase();
+    const domainKeywords = {
+      'Coding': ['code', 'program', 'script', 'function', 'api', 'database', 'algorithm', 'debug', 'compile', 'framework', 'library', 'python', 'javascript', 'java', 'c++', 'html', 'css', 'react', 'node', 'git'],
+      'Writing': ['write', 'article', 'story', 'essay', 'blog', 'content', 'copy', 'edit', 'grammar', 'creative', 'narrative', 'poem', 'letter', 'email', 'report'],
+      'Design': ['design', 'ui', 'ux', 'graphic', 'logo', 'color', 'layout', 'wireframe', 'mockup', 'photoshop', 'illustrator', 'figma', 'sketch'],
+      'Business': ['business', 'strategy', 'marketing', 'sales', 'finance', 'plan', 'startup', 'entrepreneur', 'management', 'analysis', 'market', 'customer'],
+      'Cybersecurity': ['security', 'hack', 'vulnerability', 'encryption', 'firewall', 'penetration', 'malware', 'threat', 'privacy', 'authentication', 'owasp'],
+      'Blockchain': ['blockchain', 'crypto', 'bitcoin', 'ethereum', 'smart contract', 'nft', 'defi', 'wallet', 'mining', 'consensus'],
+      'Research': ['research', 'study', 'analyze', 'data', 'experiment', 'hypothesis', 'methodology', 'literature', 'findings', 'conclusion'],
+      'Problem-Solving': ['problem', 'solve', 'fix', 'troubleshoot', 'issue', 'error', 'optimize', 'improve', 'challenge', 'solution']
+    };
+    
+    let bestDomain = 'Coding'; // default
+    let maxMatches = 0;
+    
+    for (const [domain, keywords] of Object.entries(domainKeywords)) {
+      const matches = keywords.filter(keyword => lowerInput.includes(keyword)).length;
+      if (matches > maxMatches) {
+        maxMatches = matches;
+        bestDomain = domain;
+      }
+    }
+    
+    return bestDomain;
+  }
+
+  function initChipGroups() {
+    document.querySelectorAll('#domainGroup .chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#domainGroup .chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedDomain = btn.dataset.val;
+      });
+    });
+    document.querySelectorAll('#levelGroup .chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#levelGroup .chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedLevel = btn.dataset.val;
+      });
+    });
+    document.querySelectorAll('#tokenGroup .chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#tokenGroup .chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedTokens = parseInt(btn.dataset.val);
+      });
+    });
+    document.querySelectorAll('#aiGroup .chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        selectedAIs = Array.from(document.querySelectorAll('#aiGroup .chip.active')).map(b => b.dataset.val);
+        if (selectedAIs.length === 0) {
+          // Ensure at least one AI is selected
+          btn.classList.add('active');
+          selectedAIs = [btn.dataset.val];
+        }
+      });
+    });
+  }
+
+  function initExamples() {
+    document.querySelectorAll('.ex-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.getElementById('rawInput').value = card.dataset.input;
+        updateCharCount(card.dataset.input.length);
+        setDomain(card.dataset.domain);
+        setLevel(card.dataset.level);
+        selectedTokens = parseInt(card.dataset.tokens || 1000);
+        document.querySelectorAll('#tokenGroup .chip').forEach(b => {
+          b.classList.toggle('active', b.dataset.val === card.dataset.tokens);
+        });
+        document.getElementById('rawInput').focus();
+      });
+    });
+  }
+
+  function setDomain(val) {
+    document.querySelectorAll('#domainGroup .chip').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+    selectedDomain = val;
+  }
+
+  function setLevel(val) {
+    document.querySelectorAll('#levelGroup .chip').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+    selectedLevel = val;
+  }
+
+  function initTextarea() {
+    const ta = document.getElementById('rawInput');
+    if (!ta) return;
+    ta.addEventListener('input', () => {
+      updateCharCount(ta.value.length);
+      const detected = detectDomain(ta.value);
+      if (detected !== selectedDomain) {
+        setDomain(detected);
+      }
+    });
+    updateCharCount(ta.value.length);
+  }
+
+  function updateCharCount(len) {
+    const el = document.getElementById('charCount');
+    el.textContent = `${len} / 800`;
+    el.classList.toggle('warn', len > 700);
+  }
+
+  function initKeyboard() {
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (!isGenerating) generatePrompt(); }
+      if (e.key === 'Escape') closeSidebar();
+    });
+  }
+
+  function initButtons() {
+    const genBtn = document.getElementById('genBtn');
+    if (genBtn) genBtn.addEventListener('click', () => { if (!isGenerating) generatePrompt(); });
+
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) copyBtn.addEventListener('click', copyPrompt);
+
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) downloadBtn.addEventListener('click', downloadPrompt);
+
+    const regenBtn = document.getElementById('regenerateBtn');
+    if (regenBtn) regenBtn.addEventListener('click', () => { if (!isGenerating) generatePrompt(); });
+
+    const useChatBtn = document.getElementById('useChatBtn');
+    if (useChatBtn) useChatBtn.addEventListener('click', () => {
+      const promptText = getActivePromptText();
+      if (!promptText) return;
+      if (typeof sendPrompt === 'function') {
+        sendPrompt(promptText);
+      } else {
+        navigator.clipboard.writeText(promptText).then(() => {
+          showToast('Prompt copied — paste it into your chat!');
+        }).catch(() => {
+          copyPrompt();
+        });
+      }
+    });
+
+    const themeBtn = document.getElementById('themeBtn');
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+    const menuBtn = document.getElementById('menuBtn');
+    if (menuBtn) menuBtn.addEventListener('click', toggleSidebar);
+  }
+
+  // ─── GENERATE (Gemini API) ───────────────────────────────────────────────
+  async function generatePrompt() {
+    const raw = document.getElementById('rawInput').value.trim();
+    if (!raw) { showError('Please describe what you want to achieve first.'); return; }
+    if (raw.length < 5) { showError('Input too short — add more detail for a better prompt.'); return; }
+
+    hideError();
+    setLoading(true);
+    document.getElementById('outputPanel').classList.remove('visible');
+    document.getElementById('statusDot').classList.add('pulsing');
+
+    const systemPrompt = buildSystemPrompt();
+    const userMessage = `Raw input: "${raw}"\nDomain: ${selectedDomain}\nComplexity level: ${selectedLevel}\nTarget AIs: ${selectedAIs.join(', ')}\n\nGenerate optimized FCM prompts for each target AI. Output ONLY the prompts, nothing else.`;
+
+    const GEMINI_API_KEY = 'AIzaSyCTYCEvMtY5XTK201UUHEA5hsSc_MRxNH0'; // Replace with your actual Gemini API key
+    const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+    try {
+      const res = await fetch(GEMINI_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userMessage }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { maxOutputTokens: selectedTokens, temperature: 0.7 }
+        })
+      });
+
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const err = await res.json(); msg = err.error?.message || msg; } catch {}
+        // Fallback: generate a structured prompt locally if API fails
+        const fallback = generateFallbackPrompt(raw);
+        const prompts = parsePrompts(fallback);
+        lastPrompts = prompts;
+        await renderPrompts(prompts);
+        updateMetaForMultiple(prompts);
+        saveToHistory(raw, prompts);
+        updateGenCount();
+        document.getElementById('outputPanel').classList.add('visible');
+        document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        showToast(`API unavailable (${msg}) — showing local prompt`);
+        setLoading(false);
+        document.getElementById('statusDot').classList.remove('pulsing');
+        return;
+      }
+
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+      if (!text) {
+        const fallback = generateFallbackPrompt(raw);
+        const prompts = parsePrompts(fallback);
+        lastPrompts = prompts;
+        await renderPrompts(prompts);
+        updateMetaForMultiple(prompts);
+        saveToHistory(raw, prompts);
+        updateGenCount();
+        document.getElementById('outputPanel').classList.add('visible');
+        document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        showToast('Empty API response — showing local prompt');
+        setLoading(false);
+        document.getElementById('statusDot').classList.remove('pulsing');
+        return;
+      }
+
+      const prompts = parsePrompts(text);
+      lastPrompts = prompts;
+      await renderPrompts(prompts);
+      updateMetaForMultiple(prompts);
+      saveToHistory(raw, prompts);
+      updateGenCount();
+      document.getElementById('outputPanel').classList.add('visible');
+      document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    } catch (e) {
+      // Network error — use fallback local generator
+      const fallback = generateFallbackPrompt(raw);
+      const prompts = parsePrompts(fallback);
+      lastPrompts = prompts;
+      await renderPrompts(prompts);
+      updateMetaForMultiple(prompts);
+      saveToHistory(raw, prompts);
+      updateGenCount();
+      document.getElementById('outputPanel').classList.add('visible');
+      document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToast('Offline mode — local prompt generated');
+    }
+
+    setLoading(false);
+    document.getElementById('statusDot').classList.remove('pulsing');
+  }
+
+  function generateFallbackPrompt(raw) {
+    const aiList = selectedAIs.length ? selectedAIs : ['Claude'];
+    return aiList.map(ai => `=== ${ai} ===
+ROLE
+You are a world-class ${selectedDomain} expert and specialist with deep practical experience.
+
+OBJECTIVE
+${raw.charAt(0).toUpperCase() + raw.slice(1).replace(/[.!?]?$/, '.')}
+
+CONTEXT
+This task involves ${selectedDomain.toLowerCase()} work at a ${selectedLevel} level. The goal is to produce a precise, actionable, and high-quality result that meets real-world standards. No assumptions should be made without explicit confirmation.
+
+CONSTRAINTS
+- Strictly follow the objective without scope creep
+- Use only verified, well-established approaches
+- Produce output that is complete and production-ready
+- State all assumptions explicitly before starting
+- Validate all steps for correctness before responding
+
+EXECUTION PLAN
+1. Analyze: Carefully read and decompose the objective into its core requirements
+2. Plan: Outline a clear, logical approach to address all requirements
+3. Execute: Implement the solution with precision and thoroughness
+4. Verify: Review output for completeness, correctness, and quality before final delivery
+
+OUTPUT FORMAT
+Provide a well-structured response with clear section headings. Use code blocks for any code, bullet points for lists, and tables where comparison is needed. Approximate length: ${selectedTokens > 1000 ? 'comprehensive (800–1200 words)' : 'concise (400–700 words)'}.
+
+QUALITY RULES
+- No vague language, filler, or generic placeholders
+- State ALL assumptions explicitly before starting
+- If any detail is uncertain, say so clearly — do NOT fabricate
+- Validate logical consistency before final output
+- Tailor every sentence to this specific ${selectedDomain} context
+
+REALISM LAYER
+A senior ${selectedDomain} professional would consider edge cases, maintainability, performance constraints, and real-world tradeoffs. Approach this with that same level of diligence — not textbook theory, but battle-tested practice.`).join('\n\n');
+  }
+
+  function parsePrompts(text) {
+    const prompts = {};
+    const parts = text.split(/^===\s*(.+?)\s*===$/gm).filter(s => s.trim());
+    for (let i = 0; i < parts.length; i += 2) {
+      const aiName = parts[i].trim();
+      const promptText = (parts[i + 1] || '').trim();
+      if (aiName && promptText) {
+        prompts[aiName] = promptText;
+      }
+    }
+    if (Object.keys(prompts).length === 0) {
+      prompts[selectedAIs[0] || 'Claude'] = text.trim();
+    }
+    return prompts;
+  }
+
+  function buildSystemPrompt() {
+    const levelGuide = {
+      Beginner: 'Use simple language. Keep constraints to 3-4. Execution plan should be straightforward. Output format should be plain text or simple Markdown.',
+      Professional: 'Use domain-specific terminology. 4-5 constraints. Execution plan should include planning and verification. Output format can be structured Markdown.',
+      Expert: 'Use precise technical language. 5-6 strict constraints. Full 4-step execution with edge case analysis. Output can demand structured JSON, tables, typed code, or formal reports.'
+    };
+    
+    const aiOptimizations = {
+      Claude: 'Leverage Claude\'s strength in structured reasoning and analysis. Emphasize step-by-step thinking, clear constraints, and comprehensive execution plans. Use formal, precise language.',
+      ChatGPT: 'Leverage ChatGPT\'s strength in creative and conversational responses. Include engaging, human-like elements, flexible constraints, and adaptive execution. Use natural, flowing language.',
+      Gemini: 'Leverage Gemini\'s multimodal capabilities. Include references to images/diagrams where relevant, structured data formats, and innovative problem-solving approaches. Use modern, concise language.'
+    };
+    
+    const targetAIs = selectedAIs.map(ai => `${ai}: ${aiOptimizations[ai] || 'General optimization'}`).join('\n');
+    
+    return `You are an elite Prompt Architecture Engine operating in Full Capability Mode (FCM).
+Task: Transform raw user input into production-grade, ultra-optimized AI prompts tailored for specific AI models.
+Domain specialization: ${selectedDomain}
+Complexity level: ${selectedLevel}
+Level guidance: ${levelGuide[selectedLevel]}
+
+Target AIs and their optimizations:
+${targetAIs}
+
+For each target AI, generate a complete FCM prompt with 8 sections optimized for that AI's capabilities.
+
+OUTPUT FORMAT:
+=== AI_NAME ===
+[8-section FCM prompt for that AI]
+
+[Repeat for each AI]
+
+REQUIRED FCM STRUCTURE — 8 sections, in this exact order, with these exact headings:
+
+ROLE
+[One precise expert identity sentence, tailored to the AI]
+
+OBJECTIVE
+[One sharp, measurable goal sentence]
+
+CONTEXT
+[2-3 sentences: real-world scenario with specific details from the input]
+
+CONSTRAINTS
+- [Hard rule 1]
+- [Hard rule 2]
+- [Hard rule 3]
+- [Hard rule 4 if needed]
+- [Hard rule 5-6 for Expert level]
+
+EXECUTION PLAN
+1. Analyze: [specific analysis action]
+2. Plan: [specific planning action]
+3. Execute: [specific execution action]
+4. Verify: [self-validation action before responding]
+
+OUTPUT FORMAT
+[Precise description: format type, sections/headings required, approximate length, any tables/code blocks/etc.]
+
+QUALITY RULES
+- No vague language, filler, or generic placeholders
+- State ALL assumptions explicitly before starting
+- If any detail is uncertain, say so clearly — do NOT fabricate
+- Validate logical consistency before final output
+- [1-2 domain-specific quality rules matching ${selectedDomain}]
+
+REALISM LAYER
+[1 concise paragraph: what a senior real-world ${selectedDomain} expert would actually consider]
+
+STRICT OUTPUT RULES:
+- Output ONLY the AI-specific prompts in the format above — zero preamble, zero explanation
+- Each prompt must be tailored to the AI's strengths
+- Every section heading must be present and in ALL CAPS on its own line
+- Be specific to THIS exact input — never write generic filler
+- No hallucinated tools, methods, libraries, or claims`;
+  }
+
+  async function renderPrompts(prompts) {
+    const tabsContainer = document.getElementById('aiTabs');
+    const container = document.getElementById('promptContainer');
+    tabsContainer.innerHTML = '';
+    container.innerHTML = '';
+
+    const aiNames = Object.keys(prompts);
+    if (aiNames.length === 0) return;
+
+    aiNames.forEach((ai, index) => {
+      const tab = document.createElement('button');
+      tab.className = 'ai-tab' + (index === 0 ? ' active' : '');
+      tab.textContent = ai;
+      tab.onclick = () => switchTab(ai);
+      tabsContainer.appendChild(tab);
+
+      const card = document.createElement('div');
+      card.className = 'prompt-card' + (index === 0 ? ' active' : '');
+
+      const header = document.createElement('div');
+      header.className = 'prompt-card-header';
+
+      const title = document.createElement('div');
+      title.className = 'prompt-card-title';
+      title.textContent = ai;
+
+      const copyButton = document.createElement('button');
+      copyButton.className = 'copy-ai-btn';
+      copyButton.type = 'button';
+      copyButton.textContent = 'Copy prompt';
+      copyButton.addEventListener('click', () => copyText(prompts[ai]));
+
+      header.append(title, copyButton);
+      card.appendChild(header);
+
+      const promptDiv = document.createElement('div');
+      promptDiv.className = 'ai-prompt prompt-box' + (index === 0 ? ' active' : '');
+      promptDiv.id = `prompt-${ai}`;
+      card.appendChild(promptDiv);
+      container.appendChild(card);
+
+      streamOutputTo(prompts[ai], promptDiv);
+    });
+  }
+
+  function switchTab(aiName) {
+    document.querySelectorAll('.ai-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.prompt-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.ai-prompt').forEach(p => p.classList.remove('active'));
+    const aiNames = Object.keys(lastPrompts);
+    const index = aiNames.indexOf(aiName);
+    if (index >= 0) {
+      const tabs = document.querySelectorAll('.ai-tab');
+      const cards = document.querySelectorAll('.prompt-card');
+      const prompts = document.querySelectorAll('.ai-prompt');
+      if (tabs[index]) tabs[index].classList.add('active');
+      if (cards[index]) cards[index].classList.add('active');
+      if (prompts[index]) prompts[index].classList.add('active');
+    }
+  }
+
+  async function streamOutputTo(text, box) {
+    box.textContent = '';
+    box.innerHTML = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor-blink';
+    box.appendChild(cursor);
+    const chars = text.split('');
+    const BATCH = 4, DELAY = 8;
+    for (let i = 0; i < chars.length; i += BATCH) {
+      const chunk = chars.slice(i, i + BATCH).join('');
+      const progress = Math.min((i / chars.length) * 100, 99);
+      document.getElementById('progressFill').style.width = progress + '%';
+      box.insertBefore(document.createTextNode(chunk), cursor);
+      if (i % 40 === 0) await sleep(DELAY);
+    }
+    cursor.remove();
+    document.getElementById('progressFill').style.width = '100%';
+    applyHighlighting(box, text);
+    setTimeout(() => { document.getElementById('progressFill').style.width = '0%'; }, 800);
+  }
+
+  function applyHighlighting(box, text) {
+    const sections = ['ROLE','OBJECTIVE','CONTEXT','CONSTRAINTS','EXECUTION PLAN','OUTPUT FORMAT','QUALITY RULES','REALISM LAYER'];
+    let html = escapeHtml(text);
+    sections.forEach(s => { html = html.replace(new RegExp(`^(${s})$`, 'gm'), `<span class="hl-section">${s}</span>`); });
+    html = html.replace(/^(\d+\.\s)/gm, '<span class="hl-num">$1</span>');
+    box.innerHTML = html;
+  }
+
+  function escapeHtml(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function updateMetaForMultiple(prompts) {
+    const totalWords = Object.values(prompts).reduce((sum, text) => sum + text.split(/\s+/).filter(Boolean).length, 0);
+    const sections = ['ROLE','OBJECTIVE','CONTEXT','CONSTRAINTS','EXECUTION PLAN','OUTPUT FORMAT','QUALITY RULES','REALISM LAYER'];
+    const allSections = new Set();
+    Object.values(prompts).forEach(text => {
+      sections.forEach(s => { if (text.includes(s)) allSections.add(s); });
+    });
+    const foundSections = Array.from(allSections);
+    document.getElementById('metaChips').innerHTML = [
+      `<span class="meta-chip">${selectedDomain}</span>`,
+      `<span class="meta-chip">${selectedLevel}</span>`,
+      `<span class="meta-chip">${totalWords} words</span>`,
+      `<span class="meta-chip">${foundSections.length}/8 sections</span>`
+    ].join('');
+    document.getElementById('sectionList').innerHTML =
+      foundSections.map(s => `<span class="sec-pill">${s}</span>`).join('') +
+      sections.filter(s => !foundSections.includes(s)).map(s => `<span class="sec-pill" style="opacity:0.35">${s}</span>`).join('');
+  }
+
+  function getHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+  }
+
+  function saveToHistory(input, prompt) {
+    const h = getHistory();
+    h.unshift({ id: Date.now(), input: input.slice(0, 100), prompt, domain: selectedDomain, level: selectedLevel, date: new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' }) });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 30)));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const h = getHistory();
+    const list = document.getElementById('historyList');
+    const empty = document.getElementById('historyEmpty');
+    if (h.length === 0) { empty.style.display = 'block'; list.querySelectorAll('.hist-item').forEach(el => el.remove()); return; }
+    empty.style.display = 'none';
+    list.querySelectorAll('.hist-item').forEach(el => el.remove());
+    h.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'hist-item';
+      div.innerHTML = `<div class="hist-item-meta"><span class="hist-chip">${item.domain}</span><span style="color:var(--text3);font-size:10px;">${item.date}</span></div><div class="hist-item-text">${escapeHtml(item.input)}</div><button class="hist-del" aria-label="Delete history item" data-id="${item.id}">✕</button>`;
+      div.addEventListener('click', e => { if (e.target.classList.contains('hist-del')) { deleteHistory(item.id); return; } loadHistory(item); });
+      list.appendChild(div);
+    });
+  }
+
+  function loadHistory(item) {
+    document.getElementById('rawInput').value = item.input;
+    updateCharCount(item.input.length);
+    setDomain(item.domain);
+    setLevel(item.level);
+    const promptData = parseStoredPrompt(item.prompt);
+    lastPrompts = promptData;
+    renderPrompts(promptData);
+    updateMetaForMultiple(promptData);
+    document.getElementById('outputPanel').classList.add('visible');
+    closeSidebar();
+    document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function deleteHistory(id) {
+    const h = getHistory().filter(i => i.id !== id);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+    renderHistory();
+  }
+
+  function parseStoredPrompt(prompt) {
+    if (typeof prompt !== 'string') return prompt;
+    try {
+      const parsed = JSON.parse(prompt);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch {}
+    return parsePrompts(prompt);
+  }
+
+  function clearHistory() {
+    if (!confirm('Clear all history?')) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+  }
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    if (sidebar.classList.contains('open')) { closeSidebar(); return; }
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem(THEME_KEY, next);
+    updateThemeIcon(next);
+  }
+
+  function updateThemeIcon(theme) {
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+  }
+
+  // FIX #3: Removed dead code "btn.querySelector('span') ? null : null"
+  function getActivePromptText() {
+    const activePrompt = document.querySelector('.ai-prompt.active');
+    if (activePrompt) {
+      return activePrompt.textContent.trim();
+    }
+    const firstAi = Object.keys(lastPrompts)[0];
+    return firstAi ? lastPrompts[firstAi] : '';
+  }
+
+  function copyText(text) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Copied to clipboard!');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('Copied!');
+    });
+  }
+
+  function copyPrompt() {
+    copyText(getActivePromptText());
+  }
+
+  function downloadPrompt() {
+    const promptText = getActivePromptText();
+    if (!promptText) return;
+    const blob = new Blob([promptText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fcm_prompt_${selectedDomain.toLowerCase()}_${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Downloaded!');
+  }
+
+  function setLoading(on) {
+    isGenerating = on;
+    const btn = document.getElementById('genBtn');
+    const regen = document.getElementById('regenerateBtn');
+    btn.disabled = on;
+    regen.disabled = on;
+    if (on) {
+      btn.innerHTML = '<div class="spinner"></div>Generating…';
+    } else {
+      btn.innerHTML = `<div class="btn-icon"><svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg></div>Generate Optimized Prompt`;
+    }
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    const msgEl = document.getElementById('errorMsg');
+    if (!box || !msgEl) return;
+    msgEl.textContent = msg;
+    box.classList.remove('hidden');
+  }
+
+  function hideError() {
+    const box = document.getElementById('errorBox');
+    if (!box) return;
+    box.classList.add('hidden');
+  }
+
+  function updateGenCount() {
+    genCount++;
+    localStorage.setItem(COUNT_KEY, genCount);
+    document.getElementById('genCount').textContent = genCount;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
