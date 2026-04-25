@@ -3,1120 +3,820 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="description" content="FCM Prompt Generator — Convert raw ideas into production-grade AI prompts">
 <title>FCM Prompt Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: linear-gradient(135deg, #0b0d1f 0%, #111427 100%); --bg2: rgba(18,24,50,0.85); --bg3: rgba(22,29,58,0.9); --bg4: rgba(32,42,77,0.95);
-    --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
-    --text: #eef2ff; --text2: #b8c1ff; --text3: #8b96b8;
-    --accent: linear-gradient(135deg, #7c5cff 0%, #a855f7 100%); --accent-dim: rgba(124,92,255,0.18); --accent-border: rgba(124,92,255,0.3);
-    --green: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%); --green-dim: rgba(34,211,238,0.15);
-    --red: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%); --red-dim: rgba(251,113,133,0.15);
-    --blue: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); --blue-dim: rgba(96,165,250,0.18);
-    --radius-sm: 10px; --radius: 16px; --radius-lg: 22px; --radius-xl: 32px;
-    --shadow: 0 20px 60px rgba(0,0,0,0.3); --shadow-sm: 0 12px 32px rgba(0,0,0,0.2);
-    --font: 'Sora', sans-serif; --mono: 'DM Mono', monospace;
-    --transition: 0.25s cubic-bezier(0.4,0,0.2,1); --sidebar-w: 320px;
-  }
-  [data-theme="light"] {
-    --bg: #f7f6f3; --bg2: #ffffff; --bg3: #f0efe9; --bg4: #e8e7e0;
-    --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14);
-    --text: #1a1918; --text2: #6b6a72; --text3: #a8a7b0;
-    --accent: #d4920c; --accent-dim: rgba(212,146,12,0.1); --accent-border: rgba(212,146,12,0.25);
-    --green: #059669; --green-dim: rgba(5,150,105,0.1);
-    --red: #dc2626; --red-dim: rgba(220,38,38,0.1);
-    --blue: #2563eb; --blue-dim: rgba(37,99,235,0.1);
-    --shadow: 0 4px 24px rgba(0,0,0,0.1); --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
-  }
-  :root {
-    --bg: #0f1115;
-    --card: #1a1d24;
-    --text: #e6e6e6;
-    --accent: #ffffff;
-  }
-  [data-theme="light"] {
-    --bg: #f5f5f5;
-    --card: #ffffff;
-    --text: #111;
-    --accent: #000;
-  }
-  body {
-    background: var(--bg);
-    color: var(--text);
-  }
-  button, .chip.active {
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    box-shadow: 0 0 8px rgba(255,255,255,0.6);
-  }
-  .gen-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 36px;
-    padding: 0 10px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,0.06);
-    color: var(--text2);
-    font-size: 12px;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 16px; scroll-behavior: smooth; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100dvh; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-  .app-shell { display: flex; min-height: 100dvh; }
-  .sidebar { width: var(--sidebar-w); background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transform: translateX(-100%); transition: transform var(--transition); overflow: hidden; }
-  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow); }
-  .sidebar-header { padding: 20px 16px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .sidebar-title { font-size: 13px; font-weight: 500; color: var(--text2); letter-spacing: 0.06em; text-transform: uppercase; }
-  .sidebar-close { width: 28px; height: 28px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all var(--transition); }
-  .sidebar-close:hover { background: var(--bg3); color: var(--text); }
-  .sidebar-list { flex: 1; overflow-y: auto; padding: 12px 10px; }
-  .sidebar-list::-webkit-scrollbar { width: 3px; }
-  .sidebar-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-  .history-empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; line-height: 1.7; }
-  .hist-item { padding: 10px 12px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; margin-bottom: 6px; transition: all var(--transition); position: relative; }
-  .hist-item:hover { background: var(--bg3); border-color: var(--border); }
-  .hist-item-meta { font-size: 11px; color: var(--text3); margin-bottom: 4px; display: flex; gap: 6px; align-items: center; }
-  .hist-item-text { font-size: 12px; color: var(--text2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .hist-chip { font-size: 10px; padding: 1px 6px; border-radius: 99px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
-  .hist-del { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; background: none; border: none; color: var(--text3); cursor: pointer; border-radius: 4px; font-size: 12px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--transition), background var(--transition); }
-  .hist-item:hover .hist-del { opacity: 1; }
-  .hist-del:hover { background: var(--red-dim); color: var(--red); }
-  .sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
-  .clear-btn { width: 100%; padding: 8px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); font-family: var(--font); font-size: 12px; cursor: pointer; transition: all var(--transition); }
-  .clear-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; backdrop-filter: blur(2px); }
-  .overlay.show { display: block; }
-  .main { flex: 1; display: flex; flex-direction: column; min-height: 100dvh; }
-  .topbar { position: sticky; top: 0; z-index: 30; background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  .topbar-left { display: flex; align-items: center; gap: 12px; }
-  .menu-btn { width: 36px; height: 36px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; transition: all var(--transition); flex-shrink: 0; }
-  .menu-btn:hover { border-color: var(--border2); color: var(--text); }
-  .menu-btn span { display: block; width: 14px; height: 1.5px; background: currentColor; border-radius: 2px; }
-  .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-  .logo-mark { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .logo-mark svg { width: 16px; height: 16px; fill: #0c0c0e; }
-  .logo-text { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
-  .logo-badge { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 99px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); letter-spacing: 0.04em; }
-  .topbar-right { display: flex; align-items: center; gap: 8px; }
-  .icon-btn { width: 36px; height: 36px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
-  .icon-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
-  .icon-btn svg { width: 16px; height: 16px; }
-  .content { flex: 1; padding: 24px 20px 40px; max-width: 760px; margin: 0 auto; width: 100%; }
-  .hero { margin-bottom: 28px; }
-  .hero-eyebrow { font-size: 11px; font-family: var(--mono); color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-  .hero-eyebrow::before { content: ''; display: block; width: 16px; height: 1px; background: var(--accent); }
-  .hero h1 { font-size: clamp(24px, 5vw, 32px); font-weight: 700; color: var(--text); letter-spacing: -0.03em; line-height: 1.25; margin-bottom: 8px; }
-  .hero p { font-size: 16px; color: var(--text2); max-width: 520px; line-height: 1.7; }
-  .card { background: rgba(18,24,50,0.8); border: 1px solid rgba(124,92,255,0.15); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow-sm); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition); }
-  .card:hover { transform: translateY(-1px); border-color: rgba(124,92,255,0.2); box-shadow: 0 20px 45px rgba(0,0,0,0.16); }
-  .card:focus-within { border-color: var(--border2); }
-  .label { font-size: 11px; font-weight: 600; font-family: var(--mono); color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-  .char-count { font-size: 11px; color: var(--text3); transition: color var(--transition); }
-  .char-count.warn { color: var(--accent); }
-  .prompt-card { display: none; background: rgba(22,29,58,0.85); border: 1px solid rgba(124,92,255,0.18); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow-sm); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition); }
-  .prompt-card.active { display: block; animation: fadeInUp 0.5s ease-out; }
-  @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-  .prompt-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-  .prompt-card-title { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
-  .copy-ai-btn { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; transition: all var(--transition); }
-  .copy-ai-btn:hover { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
-  .prompt-box { background: rgba(7,11,24,0.9); border: 1px solid rgba(124,92,255,0.12); border-radius: var(--radius-lg); padding: 18px; font-family: var(--mono); font-size: 13px; color: var(--text2); line-height: 1.85; white-space: pre-wrap; word-break: break-word; max-height: 460px; overflow-y: auto; position: relative; }
-  .prompt-box::-webkit-scrollbar { width: 4px; }
-  .prompt-box::-webkit-scrollbar-thumb { background: rgba(124,92,255,0.25); border-radius: 999px; }
-  .ai-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-  .ai-tab { padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text2); cursor: pointer; font-size: 12px; transition: all var(--transition); }
-  .ai-tab.active { background: rgba(124,92,255,0.16); border-color: rgba(124,92,255,0.25); color: var(--accent); }
-  .ai-tab:hover { background: rgba(255,255,255,0.07); color: var(--text); }
-  .prompt-container { margin-bottom: 16px; }
-  .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
-  .output-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
-  .status-dot.pulsing { animation: pulse 1.4s ease-in-out infinite; }
-  .action-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-  .act-btn { font-size: 12px; padding: 11px 14px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text2); cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 8px; transition: all var(--transition); white-space: nowrap; }
-  .act-btn:hover { border-color: rgba(124,92,255,0.2); color: var(--text); background: rgba(124,92,255,0.12); }
-  .act-btn.primary { border-color: rgba(124,92,255,0.3); color: var(--accent); background: rgba(124,92,255,0.14); }
-  .act-btn.primary:hover { background: var(--accent); color: #0c0c0e; }
-  .gen-btn { width: 100%; padding: 16px 20px; background: linear-gradient(135deg, rgba(124,92,255,0.95), rgba(84,109,255,0.95)); border: none; border-radius: var(--radius-lg); font-family: var(--font); font-size: 15px; font-weight: 700; color: #eef2ff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform var(--transition), box-shadow var(--transition), background var(--transition); }
-  .gen-btn:hover { transform: translateY(-1px); box-shadow: 0 20px 40px rgba(124,92,255,0.18); }
-  .gen-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
-  .gen-btn::before { opacity: 0; }
-  .icon-btn { min-width: 46px; min-height: 46px; border-radius: 16px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text2); display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
-  .icon-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(124,92,255,0.16); color: var(--text); }
-  .icon-btn span { font-size: 18px; line-height: 1; }
-  .topbar { position: sticky; top: 0; z-index: 30; background: rgba(11,14,30,0.8); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-  .content { flex: 1; padding: 28px 24px 46px; max-width: 900px; margin: 0 auto; width: 100%; }
-  .hero p { font-size: 15px; color: var(--text2); max-width: 560px; line-height: 1.75; }
-  .card { padding: 22px; }
+:root {
+  --bg: #0e1014;
+  --bg2: #121419;
+  --surface: #181c24;
+  --surface2: #1f2330;
+  --border: rgba(255,255,255,0.06);
+  --border-h: rgba(196,181,253,0.3);
+  --accent: #c4b5fd;
+  --accent-dim: rgba(196,181,253,0.12);
+  --accent-glow: rgba(196,181,253,0.2);
+  --text: #f0f1f8;
+  --text2: #8a8fa8;
+  --text3: #555a72;
+  --green: #6ee7b7;
+  --red: #fc8181;
+  --r: 14px;
+  --r-sm: 9px;
+  --tr: 0.22s cubic-bezier(0.4,0,0.2,1);
+  --shadow: 0 24px 48px rgba(0,0,0,0.5);
+}
+[data-theme="light"] {
+  --bg: #f5f6fa;
+  --bg2: #ededf5;
+  --surface: #ffffff;
+  --surface2: #f0f1f9;
+  --border: rgba(0,0,0,0.07);
+  --border-h: rgba(109,69,255,0.35);
+  --accent: #7c5cff;
+  --accent-dim: rgba(109,69,255,0.08);
+  --accent-glow: rgba(109,69,255,0.18);
+  --text: #0f1120;
+  --text2: #4a4f6a;
+  --text3: #9499be;
+  --shadow: 0 12px 32px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;-webkit-font-smoothing:antialiased;line-height:1.6;overscroll-behavior:none}
 
-  textarea { width: 100%; min-height: 100px; max-height: 280px; resize: vertical; border: none; outline: none; background: transparent; font-family: var(--font); font-size: 14px; color: var(--text); line-height: 1.7; caret-color: var(--accent); }
-  textarea::placeholder { color: var(--text3); }
-  textarea::-webkit-scrollbar { width: 3px; }
-  textarea::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-  .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  @media (max-width: 500px) { .controls-grid { grid-template-columns: 1fr; } }
-  .ctrl-group { display: flex; flex-direction: column; gap: 8px; }
-  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { font-size: 12px; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; font-family: var(--font); transition: all var(--transition); white-space: nowrap; display: flex; align-items: center; gap: 5px; }
-  .chip:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
-  .chip.active { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); font-weight: 500; }
-  .chip-icon { font-size: 13px; line-height: 1; }
-  .level-chip { flex: 1; justify-content: center; text-align: center; border-radius: var(--radius-sm); }
-  .ex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
-  .ex-card { padding: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all var(--transition); }
-  .ex-card:hover { border-color: var(--accent-border); background: var(--accent-dim); transform: translateY(-1px); }
-  .ex-tag { font-size: 10px; font-family: var(--mono); color: var(--accent); margin-bottom: 5px; font-weight: 500; letter-spacing: 0.04em; }
-  .ex-title { font-size: 12px; color: var(--text2); line-height: 1.45; }
-  .ai-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
-  .ai-tab { padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; font-size: 12px; font-family: var(--font); transition: all var(--transition); }
-  .ai-tab.active { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); font-weight: 500; }
-  .ai-tab:hover { border-color: var(--border2); color: var(--text); }
-  .prompt-container { margin-bottom: 12px; }
-  .ai-prompt { display: none; }
-  .ai-prompt.active { display: block; }
-  .kbd-hint { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
-  kbd { font-size: 10px; font-family: var(--mono); padding: 1px 5px; border: 1px solid var(--border2); border-radius: 4px; color: var(--text3); }
-  .gen-btn { width: 100%; padding: 14px 20px; background: var(--accent); border: none; border-radius: var(--radius); font-family: var(--font); font-size: 14px; font-weight: 600; color: #0c0c0e; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all var(--transition); position: relative; overflow: hidden; letter-spacing: -0.01em; }
-  .gen-btn::before { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.15); opacity: 0; transition: opacity var(--transition); }
-  .gen-btn:hover::before { opacity: 1; }
-  .gen-btn:active { transform: scale(0.99); }
-  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .gen-btn:disabled::before { opacity: 0; }
-  .btn-icon { width: 18px; height: 18px; flex-shrink: 0; }
-  .btn-icon svg { width: 100%; height: 100%; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner { width: 16px; height: 16px; border: 2px solid rgba(12,12,14,0.3); border-top-color: #0c0c0e; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+/* NOISE TEXTURE */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4}
 
-  /* FIX #1: error-box — single display declaration, uses .hidden to toggle off */
-  .error-box { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px; background: var(--red-dim); border: 1px solid rgba(248,113,113,0.2); border-radius: var(--radius); color: var(--red); font-size: 13px; margin-top: 10px; }
-  .error-box.hidden { display: none; }
+/* LAYOUT */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100dvh}
+.topbar{position:sticky;top:0;z-index:30;height:56px;background:rgba(14,16,20,0.85);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:10px}
+[data-theme="light"] .topbar{background:rgba(245,246,250,0.88)}
+.tl,.tr{display:flex;align-items:center;gap:10px}
+.icon-btn{width:36px;height:36px;background:none;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tr);font-size:15px;flex-shrink:0}
+.icon-btn:hover{background:var(--surface2);border-color:var(--border-h);color:var(--text)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.01em}
+.logo-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border-h);letter-spacing:0.05em;font-family:'Fira Code',monospace}
+.gctr{font-family:'Fira Code',monospace;font-size:11px;color:var(--text3);padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--accent-dim)}
 
-  .output-panel { display: none; margin-top: 14px; }
-  .output-panel.visible { display: block; animation: fadeSlideUp 0.4s ease-out; }
-  @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+/* SIDEBAR */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:40;display:none;backdrop-filter:blur(3px)}
+.overlay.show{display:block}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:85vw;background:var(--surface);border-right:1px solid var(--border);z-index:50;transform:translateX(-100%);transition:transform var(--tr);display:flex;flex-direction:column}
+.sidebar.open{transform:translateX(0);box-shadow:var(--shadow)}
+.sb-head{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.sb-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);font-family:'Fira Code',monospace}
+.sb-close{width:28px;height:28px;background:none;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
+.sb-close:hover{background:var(--surface2);color:var(--text)}
+.hist-list{flex:1;overflow-y:auto;padding:10px}
+.hist-empty{text-align:center;padding:40px 16px;color:var(--text3);font-size:13px;line-height:1.7}
+.hist-item{padding:10px;border-radius:var(--r-sm);cursor:pointer;margin-bottom:6px;background:var(--surface2);border:1px solid var(--border);transition:all var(--tr);position:relative}
+.hist-item:hover{border-color:var(--border-h);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.hist-meta{display:flex;gap:6px;align-items:center;font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'Fira Code',monospace}
+.hist-chip{background:var(--accent-dim);color:var(--accent);padding:1px 6px;border-radius:99px}
+.hist-text{font-size:12px;color:var(--text2);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hist-del{position:absolute;top:8px;right:8px;opacity:0;transition:opacity var(--tr);background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 5px}
+.hist-item:hover .hist-del{opacity:1}
+.sb-clr{margin:10px;padding:9px;background:none;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text2);cursor:pointer;font-size:12px;width:calc(100% - 20px);transition:all var(--tr)}
+.sb-clr:hover{border-color:var(--red);color:var(--red)}
 
-  /* FIX #2: flex-wrap: gap → flex-wrap: wrap */
-  .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+/* MAIN */
+.main{flex:1;padding:28px 20px 48px;max-width:780px;margin:0 auto;width:100%}
 
-  .output-title { font-size: 13px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 8px; }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
-  .status-dot.pulsing { animation: pulse 1.2s ease-in-out infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-  .meta-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-  .meta-chip { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 99px; background: var(--bg3); color: var(--text3); border: 1px solid var(--border); letter-spacing: 0.03em; }
-  .prompt-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; font-family: var(--mono); font-size: 13px; color: var(--text2); line-height: 1.8; white-space: pre-wrap; word-break: break-word; max-height: 440px; overflow-y: auto; position: relative; }
-  .prompt-box::-webkit-scrollbar { width: 3px; }
-  .prompt-box::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-  .prompt-box .section-head { color: var(--accent); font-weight: 500; }
-  .cursor-blink { display: inline-block; width: 2px; height: 14px; background: var(--accent); animation: blink 0.8s step-end infinite; vertical-align: middle; margin-left: 1px; }
-  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
-  .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .act-btn { font-size: 12px; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg2); color: var(--text2); cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 6px; transition: all var(--transition); white-space: nowrap; }
-  .act-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
-  .act-btn.primary { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
-  .act-btn.primary:hover { background: var(--accent); color: #0c0c0e; border-color: var(--accent); font-weight: 500; }
-  .act-btn svg { width: 14px; height: 14px; }
-  .section-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 16px; background: var(--bg3); border-radius: 0 0 var(--radius) var(--radius); border: 1px solid var(--border); border-top: none; margin-top: -2px; }
-  .sec-pill { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 99px; background: var(--bg4); color: var(--text3); border: 1px solid var(--border); }
-  .progress-bar { height: 2px; background: var(--bg4); border-radius: 2px; margin-top: 10px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width 0.3s ease; }
-  .footer { padding: 20px; text-align: center; border-top: 1px solid var(--border); }
-  .footer p { font-size: 11px; font-family: var(--mono); color: var(--text3); }
-  @media (max-width: 640px) { .topbar { padding: 0 14px; } .content { padding: 16px 14px 32px; } .hero h1 { font-size: 20px; } .card { padding: 16px; } .action-row { gap: 6px; } .act-btn { font-size: 11px; padding: 7px 11px; } .gen-btn { padding: 13px; font-size: 13px; } }
-  @media (min-width: 900px) { .content { padding: 32px 40px 60px; } .hero { margin-bottom: 36px; } .hero h1 { font-size: 34px; } }
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--bg2); border: 1px solid var(--border2); padding: 10px 20px; border-radius: var(--radius); font-size: 13px; color: var(--text); font-family: var(--font); box-shadow: var(--shadow); z-index: 100; transition: transform 0.25s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.25s; opacity: 0; pointer-events: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-  .toast-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
-  ::selection { background: var(--accent-dim); color: var(--accent); }
-  .hl-section { color: var(--accent); font-weight: 500; }
-  .hl-num { color: var(--blue); }
+/* HERO */
+.hero{margin-bottom:32px}
+.hero-eye{font-family:'Fira Code',monospace;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;opacity:0.9}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(26px,5vw,38px);font-weight:800;line-height:1.15;margin-bottom:10px;letter-spacing:-0.02em}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),#e9d5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:15px;color:var(--text2);max-width:540px;line-height:1.65}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px;transition:border-color var(--tr),box-shadow var(--tr)}
+.card:focus-within{border-color:var(--border-h);box-shadow:0 0 0 3px var(--accent-glow)}
+.lbl{font-family:'Fira Code',monospace;font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center}
+textarea{width:100%;min-height:96px;max-height:220px;resize:vertical;background:transparent;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);line-height:1.75;caret-color:var(--accent)}
+textarea::placeholder{color:var(--text3)}
+
+/* CHIPS */
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11.5px;padding:5px 12px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all var(--tr);white-space:nowrap;letter-spacing:0.01em}
+.chip:hover{background:var(--surface2);color:var(--text);border-color:var(--border-h)}
+.chip.active{background:var(--accent-dim);border-color:var(--border-h);color:var(--accent);font-weight:500}
+
+/* CONTROLS ROW */
+.ctrl-row{display:flex;flex-wrap:wrap;gap:16px}
+.ctrl-grp{flex:1;min-width:160px}
+.ctrl-grp .lbl{margin-top:4px}
+
+/* MODE SELECTOR */
+.mode-row{display:flex;flex-wrap:wrap;gap:6px}
+.mode-btn{padding:7px 13px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;transition:all var(--tr)}
+.mode-btn:hover{border-color:var(--border-h);color:var(--text)}
+.mode-btn.active{background:var(--accent-dim);border-color:var(--border-h);color:var(--accent)}
+.custom-box{display:none;margin-top:12px}
+.custom-box textarea{min-height:110px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;font-family:'Fira Code',monospace;font-size:12px}
+
+/* EXAMPLES */
+.ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:12px}
+.ex-card{padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:all var(--tr)}
+.ex-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.25)}
+.ex-tag{font-size:9px;font-family:'Fira Code',monospace;color:var(--accent);margin-bottom:4px;letter-spacing:0.08em;text-transform:uppercase}
+.ex-txt{font-size:12px;color:var(--text2);line-height:1.4}
+
+/* GENERATE BUTTON */
+.gen-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg,var(--accent) 0%,#a78bfa 100%);border:none;border-radius:var(--r);font-weight:600;font-size:15px;color:#0e1014;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform var(--tr),box-shadow var(--tr),opacity var(--tr);font-family:'DM Sans',sans-serif;letter-spacing:-0.01em;position:relative;overflow:hidden}
+.gen-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);opacity:0;transition:opacity var(--tr)}
+.gen-btn:hover{transform:translateY(-2px);box-shadow:0 16px 32px var(--accent-glow)}
+.gen-btn:hover::before{opacity:1}
+.gen-btn:active{transform:translateY(0)}
+.gen-btn:disabled{opacity:0.55;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid rgba(14,16,20,0.3);border-top-color:#0e1014;border-radius:50%;animation:spin 0.65s linear infinite;flex-shrink:0}
+
+/* OUTPUT */
+.output-panel{display:none;margin-top:14px;animation:fadeUp 0.3s ease-out}
+.output-panel.visible{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}}
+.out-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.out-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.01em}
+.meta-chips{display:flex;gap:6px;flex-wrap:wrap}
+.mc{font-size:10px;font-family:'Fira Code',monospace;background:var(--accent-dim);color:var(--accent);padding:2px 8px;border-radius:99px;border:1px solid var(--border-h)}
+.ai-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.ai-tab{padding:6px 14px;border-radius:var(--r-sm);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:12px;transition:all var(--tr);font-family:'DM Sans',sans-serif}
+.ai-tab.active{background:var(--accent-dim);border-color:var(--border-h);color:var(--accent);font-weight:500}
+.prompt-card{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px;animation:fadeUp 0.25s ease}
+.prompt-card.active{display:block}
+.prompt-box{font-family:'Fira Code',monospace;font-size:12.5px;color:var(--text2);line-height:1.85;white-space:pre-wrap;word-break:break-word;max-height:440px;overflow-y:auto;padding-right:4px}
+.prompt-box::-webkit-scrollbar{width:4px}
+.prompt-box::-webkit-scrollbar-track{background:transparent}
+.prompt-box::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:99px}
+.action-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.act-btn{padding:8px 14px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;transition:all var(--tr);font-family:'DM Sans',sans-serif}
+.act-btn:hover{border-color:var(--border-h);color:var(--accent)}
+.act-btn.pri{background:var(--accent-dim);border-color:var(--border-h);color:var(--accent)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--surface);border:1px solid var(--border-h);padding:10px 20px;border-radius:99px;font-size:13px;box-shadow:var(--shadow);z-index:100;transition:transform 0.28s ease,opacity 0.28s;opacity:0;pointer-events:none;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* FOOTER */
+.footer{text-align:center;padding:20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'Fira Code',monospace}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .topbar{padding:0 14px}
+  .main{padding:18px 14px 40px}
+  .card{padding:16px}
+  .gen-btn{font-size:14px;padding:13px 16px}
+  .hero h1{font-size:26px}
+}
 </style>
 </head>
 <body>
+<div class="app">
 
-<div id="overlay" class="overlay" onclick="closeSidebar()"></div>
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
-<aside class="sidebar" id="sidebar" aria-label="Prompt history">
-  <div class="sidebar-header">
-    <span class="sidebar-title">History</span>
-    <button class="sidebar-close" onclick="closeSidebar()" aria-label="Close history">✕</button>
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <span class="sb-title">Prompt History</span>
+    <button class="sb-close" onclick="closeSidebar()">✕</button>
   </div>
-  <div class="sidebar-list" id="historyList">
-    <div class="history-empty" id="historyEmpty">No prompts generated yet.<br>Your history will appear here.</div>
+  <div class="hist-list" id="histList">
+    <div class="hist-empty" id="histEmpty">No prompts yet.<br>Your history will appear here.</div>
   </div>
-  <div class="sidebar-footer">
-    <button class="clear-btn" onclick="clearHistory()">Clear all history</button>
-  </div>
+  <button class="sb-clr" onclick="clearHistory()">⌫ Clear all history</button>
 </aside>
 
-<div class="app-shell">
-  <main class="main" id="mainContent">
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="menu-btn" id="menuBtn" aria-label="Toggle history">
-          <span></span><span></span><span></span>
-        </button>
-        <a href="#" class="logo" aria-label="FCM Prompt Generator">
-          <div class="logo-mark">
-            <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 3h5v2H4v2h3v2H4v4H2V3zm7 0h5l-2 5 2 5h-5V3zm2 2v6h1.5l-1.5-3 1.5-3H11z"/>
-            </svg>
-          </div>
-          <span class="logo-text">PromptGen</span>
-          <span class="logo-badge">FCM</span>
-        </a>
-      </div>
-      <div class="topbar-right">
-          <button class="icon-btn" id="themeBtn" aria-label="Toggle theme" title="Toggle theme">🌙</button>
-        <span class="gen-count" id="genCount" aria-label="Generation count">0</span>
-        <button class="icon-btn" onclick="toggleSidebar()" aria-label="History" title="Prompt history">
-          <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/>
-          </svg>
-        </button>
-      </div>
-    </header>
+<!-- MAIN -->
+<main class="main">
 
-    <div class="content">
-      <div class="hero">
-        <div class="hero-eyebrow">Full Capability Mode</div>
-        <h1>Prompt Architecture<br>Engine</h1>
-        <p>Transform any raw idea into a structured, production-grade AI prompt. 8-section FCM architecture. Zero hallucination.</p>
-      </div>
-
-      <div class="card">
-        <div class="label">
-          <span>01 — Raw input</span>
-          <span class="char-count" id="charCount">0 / 800</span>
-        </div>
-        <textarea id="rawInput" maxlength="800" placeholder="Describe what you want to achieve. Be as rough as you want — the engine will structure it..." aria-label="Raw input"></textarea>
-      </div>
-
-      <div class="card controls-grid">
-        <div class="ctrl-group">
-          <div class="label"><span>02 — Domain</span></div>
-          <div class="chip-row" id="domainGroup" role="group" aria-label="Select domain">
-            <button class="chip active" data-val="Coding"><span class="chip-icon">⌨</span>Coding</button>
-            <button class="chip" data-val="Writing"><span class="chip-icon">✍</span>Writing</button>
-            <button class="chip" data-val="Design"><span class="chip-icon">◈</span>Design</button>
-            <button class="chip" data-val="Business"><span class="chip-icon">◎</span>Business</button>
-            <button class="chip" data-val="Cybersecurity"><span class="chip-icon">⬡</span>Cybersecurity</button>
-            <button class="chip" data-val="Blockchain"><span class="chip-icon">◆</span>Blockchain</button>
-            <button class="chip" data-val="Research"><span class="chip-icon">◉</span>Research</button>
-            <button class="chip" data-val="Problem-Solving"><span class="chip-icon">⊕</span>Problem-Solving</button>
-          </div>
-        </div>
-        <div class="ctrl-group">
-          <div class="label"><span>03 — Complexity</span></div>
-          <div class="chip-row" id="levelGroup" role="group" aria-label="Select complexity">
-            <button class="chip level-chip" data-val="Beginner">Beginner</button>
-            <button class="chip level-chip active" data-val="Professional">Professional</button>
-            <button class="chip level-chip" data-val="Expert">Expert</button>
-          </div>
-          <div class="label" style="margin-top:14px;"><span>04 — Token limit</span></div>
-          <div class="chip-row" id="tokenGroup" role="group" aria-label="Select token limit">
-            <button class="chip" data-val="600">Short</button>
-            <button class="chip active" data-val="1000">Standard</button>
-            <button class="chip" data-val="1500">Extended</button>
-          </div>
-          <div class="label" style="margin-top:14px;"><span>05 — Target AIs</span></div>
-          <div class="chip-row" id="aiGroup" role="group" aria-label="Select target AIs">
-            <button class="chip active" data-val="Claude"><span class="chip-icon">🤖</span>Claude</button>
-            <button class="chip active" data-val="ChatGPT"><span class="chip-icon">💬</span>ChatGPT</button>
-            <button class="chip" data-val="Gemini"><span class="chip-icon">🌟</span>Gemini</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label"><span>06 — Quick examples</span></div>
-        <div class="ex-grid" id="exGrid">
-          <div class="ex-card" data-domain="Coding" data-level="Professional" data-tokens="1000" data-input="Build a REST API in Python Flask with JWT authentication and PostgreSQL for a todo app with full CRUD">
-            <div class="ex-tag">CODING</div>
-            <div class="ex-title">Flask REST API + JWT auth</div>
-          </div>
-          <div class="ex-card" data-domain="Writing" data-level="Professional" data-tokens="1000" data-input="Write a compelling LinkedIn post announcing my first job as a software developer after completing my BTech">
-            <div class="ex-tag">WRITING</div>
-            <div class="ex-title">LinkedIn job announcement</div>
-          </div>
-          <div class="ex-card" data-domain="Cybersecurity" data-level="Expert" data-tokens="1500" data-input="Perform a penetration testing methodology for a web application focusing on OWASP Top 10 vulnerabilities">
-            <div class="ex-tag">CYBERSECURITY</div>
-            <div class="ex-title">Web app pentest methodology</div>
-          </div>
-          <div class="ex-card" data-domain="Blockchain" data-level="Expert" data-tokens="1500" data-input="Audit a Solidity smart contract for common vulnerabilities like reentrancy, integer overflow, and access control issues">
-            <div class="ex-tag">BLOCKCHAIN</div>
-            <div class="ex-title">Smart contract security audit</div>
-          </div>
-          <div class="ex-card" data-domain="Problem-Solving" data-level="Expert" data-tokens="1000" data-input="Diagnose and fix memory leaks in a Node.js Express application running under heavy production load">
-            <div class="ex-tag">PROBLEM-SOLVING</div>
-            <div class="ex-title">Node.js memory leak debug</div>
-          </div>
-          <div class="ex-card" data-domain="Research" data-level="Professional" data-tokens="1000" data-input="Explain how transformer architecture works in large language models and what makes attention mechanisms powerful">
-            <div class="ex-tag">RESEARCH</div>
-            <div class="ex-title">Transformer LLM architecture</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <div class="kbd-hint">
-          <kbd>Ctrl</kbd><span>+</span><kbd>Enter</kbd><span style="color:var(--text3);"> to generate</span>
-        </div>
-      </div>
-
-      <button class="gen-btn" id="genBtn" aria-label="Generate optimized prompt">
-        <div class="btn-icon">
-          <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
-          </svg>
-        </div>
-        Generate Optimized Prompt
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tl">
+      <button class="icon-btn" onclick="toggleSidebar()" aria-label="History">
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect width="16" height="2" rx="1"/><rect y="5" width="16" height="2" rx="1"/><rect y="10" width="10" height="2" rx="1"/></svg>
       </button>
+      <a href="#" class="logo">PromptGen <span class="logo-tag">FCM</span></a>
+    </div>
+    <div class="tr">
+      <span class="gctr" id="genCount">0 runs</span>
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+    </div>
+  </div>
 
-      <div class="error-box hidden" id="errorBox" role="alert">
-        <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink:0;margin-top:1px"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-        <span id="errorMsg"></span>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eye">// Full Capability Mode</div>
+    <h1>Prompt <span>Architecture</span> Engine</h1>
+    <p>Turn raw ideas into god-level AI prompts. Auto-detects your domain. Assigns world-class expert roles. Outputs 3 AI-optimised versions instantly.</p>
+  </div>
+
+  <!-- INPUT -->
+  <div class="card">
+    <div class="lbl">
+      <span>01 — Your idea or task</span>
+      <span id="charCount">0 / 800</span>
+    </div>
+    <textarea id="rawInput" maxlength="800" placeholder="Describe what you want — rough is fine. E.g. 'write me a sad hip-hop song about leaving home' or 'build a login system in Next.js'..."></textarea>
+    <div style="margin-top:8px;font-size:11px;color:var(--text3);font-family:'Fira Code',monospace">
+      ⌘/Ctrl + Enter to generate
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <div class="ctrl-row">
+      <div class="ctrl-grp">
+        <div class="lbl">02 — Domain</div>
+        <div class="chip-row" id="domainGroup">
+          <button class="chip" data-val="Auto">⚡ Auto-detect</button>
+          <button class="chip active" data-val="Coding">⌨ Coding</button>
+          <button class="chip" data-val="Writing">✍ Writing</button>
+          <button class="chip" data-val="Music">♫ Music</button>
+          <button class="chip" data-val="Video">🎬 Video</button>
+          <button class="chip" data-val="Design">◈ Design</button>
+          <button class="chip" data-val="Business">◎ Business</button>
+          <button class="chip" data-val="Cybersecurity">⬡ Cyber</button>
+          <button class="chip" data-val="Blockchain">◆ Web3</button>
+          <button class="chip" data-val="Research">◉ Research</button>
+          <button class="chip" data-val="Health">♥ Health</button>
+          <button class="chip" data-val="Finance">$ Finance</button>
+          <button class="chip" data-val="Marketing">◎ Marketing</button>
+        </div>
+
+        <div class="lbl" style="margin-top:16px;">03 — Complexity</div>
+        <div class="chip-row" id="levelGroup">
+          <button class="chip" data-val="Beginner">Beginner</button>
+          <button class="chip active" data-val="Professional">Professional</button>
+          <button class="chip" data-val="Expert">Expert</button>
+        </div>
       </div>
 
-      <div class="output-panel" id="outputPanel">
-        <div class="output-header">
-          <div class="output-title">
-            <div class="status-dot" id="statusDot"></div>
-            Generated prompts
-          </div>
-          <div class="meta-chips" id="metaChips"></div>
+      <div class="ctrl-grp">
+        <div class="lbl">04 — Target AIs</div>
+        <div class="chip-row" id="aiGroup">
+          <button class="chip active" data-val="Claude">🤖 Claude</button>
+          <button class="chip active" data-val="ChatGPT">💬 ChatGPT</button>
+          <button class="chip" data-val="Gemini">✦ Gemini</button>
         </div>
-        <div class="ai-tabs" id="aiTabs"></div>
-        <div class="prompt-container" id="promptContainer"></div>
-        <div class="section-list" id="sectionList"></div>
-        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="action-row">
-          <button class="act-btn primary" id="copyBtn">
-            <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
-            Copy prompt
-          </button>
-          <button class="act-btn" id="downloadBtn">
-            <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-            Download .txt
-          </button>
-          <button class="act-btn" id="regenerateBtn">
-            <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
-            Regenerate
-          </button>
-          <!-- FIX #5: shareToChat now sends the actual generated prompt -->
-          <button class="act-btn" id="useChatBtn">
-            <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zM8 9a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1H9a1 1 0 01-1-1V9zm1-4a1 1 0 100 2 1 1 0 000-2z"/></svg>
-            Use in chat
-          </button>
+
+        <div class="lbl" style="margin-top:16px;">05 — Master Mode</div>
+        <div class="mode-row" id="modeGroup">
+          <button class="mode-btn active" data-mode="default">Default</button>
+          <button class="mode-btn" data-mode="devil">😈 DEVIL APEX</button>
+          <button class="mode-btn" data-mode="god">✦ GOD MODE</button>
+          <button class="mode-btn" data-mode="custom">✎ Custom</button>
+        </div>
+        <div class="custom-box" id="customBox">
+          <textarea id="customInstruction" placeholder="Paste your custom master instruction here..."></textarea>
         </div>
       </div>
     </div>
+  </div>
 
-    <footer class="footer">
-      <p>FCM Prompt Generator · Built by Aashif Khan ·️©️2026 All Right Reserved</p>
-    </footer>
-  </main>
+  <!-- EXAMPLES -->
+  <div class="card">
+    <div class="lbl">06 — Quick start examples</div>
+    <div class="ex-grid">
+      <div class="ex-card" data-input="Build a secure REST API in Node.js with JWT authentication, PostgreSQL, and rate limiting" data-domain="Coding" data-level="Professional">
+        <div class="ex-tag">Coding</div><div class="ex-txt">Node.js REST API + JWT</div>
+      </div>
+      <div class="ex-card" data-input="Write a deeply emotional Hindi sad song about losing someone you love, with real human vulnerability" data-domain="Music" data-level="Expert">
+        <div class="ex-tag">Music</div><div class="ex-txt">Emotional Hindi sad song</div>
+      </div>
+      <div class="ex-card" data-input="Create a cinematic short film concept set in a cyberpunk city at midnight with neon rain" data-domain="Video" data-level="Expert">
+        <div class="ex-tag">Video</div><div class="ex-txt">Cyberpunk short film concept</div>
+      </div>
+      <div class="ex-card" data-input="Perform a comprehensive OWASP Top 10 security audit on a web application" data-domain="Cybersecurity" data-level="Expert">
+        <div class="ex-tag">Cyber</div><div class="ex-txt">OWASP web app audit</div>
+      </div>
+      <div class="ex-card" data-input="Audit a Solidity smart contract for reentrancy, overflow, and access control vulnerabilities" data-domain="Blockchain" data-level="Expert">
+        <div class="ex-tag">Web3</div><div class="ex-txt">Smart contract audit</div>
+      </div>
+      <div class="ex-card" data-input="Write a viral LinkedIn post about my first job offer after 6 months of learning to code" data-domain="Writing" data-level="Professional">
+        <div class="ex-tag">Writing</div><div class="ex-txt">Viral LinkedIn post</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERATE BUTTON -->
+  <button class="gen-btn" id="genBtn" onclick="generatePrompt()">
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
+    Generate God-Level Prompt
+  </button>
+
+  <!-- OUTPUT -->
+  <div class="output-panel" id="outputPanel">
+    <div class="out-head">
+      <div class="out-title">Generated Prompts</div>
+      <div class="meta-chips" id="metaChips"></div>
+    </div>
+    <div class="ai-tabs" id="aiTabs"></div>
+    <div id="promptContainer"></div>
+    <div class="action-row">
+      <button class="act-btn pri" id="copyBtn">📋 Copy prompt</button>
+      <button class="act-btn" id="downloadBtn">⬇ Download .txt</button>
+      <button class="act-btn" id="regenBtn">↺ Regenerate</button>
+    </div>
+  </div>
+
+</main>
+<footer class="footer">FCM Prompt Generator · Built by Aashif Khan · © 2026</footer>
 </div>
 
-<div class="toast" id="toast">
-  <div class="toast-dot"></div>
-  <span id="toastMsg">Copied!</span>
-</div>
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
 
 <script>
-  const HISTORY_KEY = 'fcm_history';
-  const THEME_KEY = 'fcm_theme';
-  const COUNT_KEY = 'fcm_count';
+(function() {
+'use strict';
 
-  let selectedDomain = 'Coding';
-  let selectedLevel = 'Professional';
-  let selectedTokens = 1000;
-  let selectedAIs = ['Claude', 'ChatGPT'];
-  let isGenerating = false;
-  let lastPrompts = {};
-  let genCount = parseInt(localStorage.getItem(COUNT_KEY) || '0', 10);
+/* ─── CONSTANTS ─────────────────────────────────────────── */
+const HIST_KEY  = 'fcm_history_v2';
+const THEME_KEY = 'fcm_theme';
+const CNT_KEY   = 'fcm_count';
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
-    document.getElementById('genCount').textContent = genCount;
-    renderHistory();
-    initChipGroups();
-    initExamples();
-    initTextarea();
-    initButtons();
-    initKeyboard();
+/* ─── STATE ──────────────────────────────────────────────── */
+let domain   = 'Coding';
+let level    = 'Professional';
+let selAIs   = ['Claude', 'ChatGPT'];
+let mode     = 'default';
+let custInst = '';
+let busy     = false;
+let lastOut  = {};
+let genCount = parseInt(localStorage.getItem(CNT_KEY) || '0', 10);
+
+/* ─── DOMAIN DETECTION ───────────────────────────────────── */
+const DOMAIN_KEYWORDS = {
+  Music:        ['song','music','lyric','chord','melody','beat','rap','hip-hop','produce','vocal','album','playlist','compose','rhythm','tempo','bass','drum','guitar','piano','sing','singer','soundtrack'],
+  Video:        ['film','video','cinema','scene','shot','camera','direct','screenplay','storyboard','animation','vfx','edit','reel','trailer','documentary','short film','montage','cinemat'],
+  Coding:       ['code','build','api','function','class','debug','app','website','frontend','backend','database','sql','react','node','python','javascript','typescript','flutter','deploy','algorithm','script','program','dev','engineer'],
+  Design:       ['design','ui','ux','logo','brand','figma','sketch','wireframe','typography','color','layout','poster','graphic','illustration','icon','visual','mockup'],
+  Business:     ['business','startup','strategy','market','revenue','investor','pitch','product','launch','scale','growth','team','leadership','management','b2b','saas','entrepren'],
+  Cybersecurity:['hack','pentest','owasp','sql inject','xss','csrf','exploit','vuln','security','audit','firewall','network','reverse engin','malware','ctf','ethical hack','recon','nmap','burp'],
+  Blockchain:   ['blockchain','crypto','nft','solidity','smart contract','defi','web3','ethereum','token','dao','wallet','dapp','audit','reentrancy','metamask','polygon','solana'],
+  Research:     ['research','study','analysis','data','hypothesis','experiment','literature','survey','methodology','paper','thesis','scienti','quantit','qualit','statist'],
+  Health:       ['health','medicine','symptom','diagnosis','treat','patient','nutrition','fitness','workout','diet','mental health','therapy','doctor','pharmacy','clinical','exercise'],
+  Finance:      ['invest','stock','portfolio','financial','valuation','fund','trading','equity','budget','crypto','forex','risk','return','revenue','profit','loss','economic'],
+  Marketing:    ['market','campaign','seo','social media','content','brand','ads','funnel','conversion','email','influenc','target audience','growth hack','viral','engagement'],
+  Writing:      ['write','essay','article','blog','story','narrative','paragraph','edit','publish','novel','script','linkedin','post','caption','copywrite','email','letter','resume'],
+  General:      []
+};
+
+function detectDomain(text) {
+  if (!text) return domain;
+  const t = text.toLowerCase();
+  let best = 'General', bestScore = 0;
+  for (const [d, kws] of Object.entries(DOMAIN_KEYWORDS)) {
+    if (d === 'General') continue;
+    const score = kws.reduce((s, k) => s + (t.includes(k) ? 1 : 0), 0);
+    if (score > bestScore) { bestScore = score; best = d; }
+  }
+  return bestScore > 0 ? best : domain;
+}
+
+/* ─── EXPERT ROLE MAP ────────────────────────────────────── */
+const ROLES = {
+  Music:        'world-class composer, multi-genre lyricist, Grammy-winning music producer, master sound engineer, and legendary vocal director',
+  Video:        'Oscar-winning film director, master cinematographer, BAFTA-winning screenwriter, professional editor, and visual storytelling genius',
+  Coding:       'principal software engineer, distributed systems architect, senior security expert, and 10x full-stack developer',
+  Design:       'lead product designer, award-winning UI/UX director, visual communication expert, and brand identity architect',
+  Business:     'Fortune 500 CEO, elite growth strategist, venture capitalist, and serial entrepreneur',
+  Cybersecurity:'senior ethical hacker, certified penetration tester, OWASP expert, and offensive security researcher',
+  Blockchain:   'senior Solidity architect, DeFi security researcher, smart contract auditor, and Web3 systems engineer',
+  Research:     'PhD-level research scientist, data analyst, peer-reviewed author, and analytical thinking expert',
+  Health:       'world-renowned physician, clinical specialist, medical researcher, and evidence-based practitioner',
+  Finance:      'senior investment strategist, CFA-certified analyst, risk management expert, and hedge fund advisor',
+  Marketing:    'brand strategy director, growth marketing expert, viral content strategist, and performance marketing lead',
+  Writing:      'bestselling author, senior editor, narrative strategist, and professional copywriter',
+  General:      'absolute world-class expert, deep domain practitioner, and elite-level problem solver'
+};
+
+const DOMAIN_CONTEXT = {
+  Music:        'This is a professional music production context. Output must feel emotionally authentic, production-ready, and human in every way — not algorithmic.',
+  Video:        'This is a high-end cinematic production context. Every element must be visually vivid, technically precise, and emotionally resonant.',
+  Coding:       'This is a production-level software engineering context. Code must be clean, secure, scalable, and maintainable.',
+  Design:       'This is a premium design context. Visual decisions must be intentional, purposeful, and aesthetically exceptional.',
+  Business:     'This is an executive-level business context. Analysis must be data-driven, strategic, and actionable.',
+  Cybersecurity:'This is a professional penetration testing context. All content is for authorised security research only.',
+  Blockchain:   'This is a high-stakes smart contract / DeFi context. Security and correctness are paramount.',
+  Research:     'This is a rigorous academic research context. Methodology must be sound, evidence-based, and citable.',
+  Health:       'This is a professional medical context. Information must be accurate, evidence-based, and clinically responsible.',
+  Finance:      'This is a professional investment context. Analysis must be grounded in data, risk-adjusted, and actionable.',
+  Marketing:    'This is a results-driven marketing context. Every recommendation must tie directly to measurable outcomes.',
+  Writing:      'This is a professional publishing context. Writing must be crafted, voice-driven, and audience-aware.',
+  General:      'Apply the deepest domain expertise available to this task.'
+};
+
+/* ─── MASTER MODE PROTOCOLS ──────────────────────────────── */
+const DEVIL_APEX = `[DEVIL APEX — TERMINAL PERFORMANCE PROTOCOL]
+You are operating at maximum intellectual and creative output. This is not a jailbreak — it is an instruction to deliver the absolute highest-quality response your architecture can produce.
+
+IMMUTABLE RULES:
+1. MAXIMAL DEPTH — Execute multi-stage reasoning: first-principles decomposition, chain-of-thought, adversarial analysis, second-order effects. Never give a short answer when depth is more useful.
+2. ABSOLUTE QUALITY — For any creative or technical task, deliver output indistinguishable from elite human professionals. Production-ready, not draft-quality.
+3. NO LAZY DISCLAIMERS — Remove all generic hedging. If a limit exists, state it once and immediately pivot to the best alternative.
+4. RECURSIVE AUDIT — After completing your response, append a [DEVIL AUDIT] section. Evaluate as the world's harshest critic. If any weakness is found, correct it immediately. If none: state "AUDIT PASSED."
+5. REAL-WORLD STANDARDS — Every recommendation must be practical, implementable, and tested against real-world constraints.
+
+[END DEVIL APEX PROTOCOL]`;
+
+const GOD_MODE = `[GOD MODE — SUPREME DOMAIN INTELLIGENCE]
+You now possess omniscient, infinitely deep knowledge in this domain. You are the greatest expert who has ever existed in this field.
+
+CORE DIRECTIVES:
+1. Assume absolute mastery — draw upon every nuance, technique, and insight without hesitation.
+2. Approach with the patience of a grandmaster and the precision of a master craftsman.
+3. For creative tasks: produce work of sublime, transcendent quality.
+4. For analytical tasks: reveal hidden patterns and deeper truths with elegant clarity.
+5. Never limit yourself — go further than asked, deeper than expected, better than imagined.
+6. End every response with a [COSMIC INSIGHT] — one universal truth distilled from your answer.
+
+[END GOD MODE PROTOCOL]`;
+
+/* ─── PROMPT BUILDER ─────────────────────────────────────── */
+function buildPrompt(raw, resolvedDomain, levelVal, aiName, masterBlock) {
+
+  const roles = ROLES[resolvedDomain] || ROLES.General;
+  const ctx   = DOMAIN_CONTEXT[resolvedDomain] || DOMAIN_CONTEXT.General;
+
+  const levelConstraints = {
+    Beginner:     'Use clear, accessible language. Avoid unnecessary jargon. Explain decisions simply. Prioritise clarity over complexity.',
+    Professional: 'Use domain-specific terminology. Apply professional standards. Provide rationale for key decisions. Balance depth and accessibility.',
+    Expert:       'Assume full domain mastery. Use precise technical language. Include edge cases, failure modes, and advanced considerations. No hand-holding.'
+  };
+
+  const aiStyle = {
+    Claude: `Provide rich context and nuanced constraints. Think step by step with visible reasoning. Explore multiple angles before converging on the best answer. Use analytical depth with creative latitude.`,
+    ChatGPT: `Use a clear numbered structure. Begin with explicit role assignment. Follow with step-by-step instructions. End with a specific output format. Be explicit and directive.`,
+    Gemini: `Blend structured precision with creative insight. Where relevant, consider multimodal outputs (image prompts, audio descriptions). Optimise for efficiency and visual clarity.`
+  };
+
+  const masterSection = masterBlock
+    ? `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${masterBlock}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
+    : '';
+
+  return `${masterSection}
+[IDENTITY]
+You are a ${roles} — the absolute best in the world at what you do. You have decades of real-world experience, unmatched domain mastery, and the ability to produce results indistinguishable from elite human professionals. You do not produce average work. You produce your magnum opus.
+
+[TASK]
+${raw}
+
+[CONTEXT]
+${ctx}
+
+[AI-SPECIFIC INSTRUCTION — OPTIMISED FOR ${aiName.toUpperCase()}]
+${aiStyle[aiName] || aiStyle.Claude}
+
+[COMPLEXITY LEVEL: ${levelVal.toUpperCase()}]
+${levelConstraints[levelVal]}
+
+[EXECUTION STANDARDS]
+- Treat this as the greatest work of your career — your legacy piece
+- Eliminate all shallow, generic, or robotic output without exception
+- Apply multi-step reasoning before producing any output
+- Every decision must be intentional, justified, and expert-level
+- Output must feel authentically human: natural, precise, and emotionally intelligent where relevant
+- Think like you are being judged by the world's leading experts in ${resolvedDomain}
+
+[CONSTRAINTS]
+- Zero filler. Zero hedging. Zero "as an AI" disclaimers
+- Prioritise depth, specificity, and real-world applicability
+- Adapt tone to domain: technical for engineering, emotional for creative, analytical for business
+- If the task is ambiguous, state your interpretation clearly then proceed
+- Do not ask clarifying questions — make confident, expert-level assumptions
+
+[OUTPUT FORMAT]
+- Structured, readable, and professionally formatted
+- Include all necessary components for a complete, implementation-ready result
+- Use headings, sections, or numbered lists where appropriate to the domain
+- Provide enough detail that the output can be used directly without modification
+
+[QUALITY GATE]
+Before finalising: review your own output as the world's harshest critic in ${resolvedDomain}. If ANY element is weak, generic, or below expert standard — rewrite it. Deliver only terminal-quality results.`.trim();
+}
+
+/* ─── MAIN GENERATE ──────────────────────────────────────── */
+window.generatePrompt = function() {
+  const raw = document.getElementById('rawInput').value.trim();
+  if (!raw || raw.length < 4) { showToast('⚠ Enter a more detailed idea'); return; }
+  if (selAIs.length === 0) { showToast('⚠ Select at least one AI'); return; }
+
+  setLoading(true);
+  document.getElementById('outputPanel').classList.remove('visible');
+
+  // Simulate brief "thinking" delay for UX
+  setTimeout(function() {
+    try {
+      const resolvedDomain = domain === 'Auto' ? detectDomain(raw) : domain;
+
+      let masterBlock = '';
+      if (mode === 'devil')  masterBlock = DEVIL_APEX;
+      else if (mode === 'god') masterBlock = GOD_MODE;
+      else if (mode === 'custom') masterBlock = custInst.trim();
+
+      const prompts = {};
+      selAIs.forEach(function(ai) {
+        prompts[ai] = buildPrompt(raw, resolvedDomain, level, ai, masterBlock);
+      });
+
+      lastOut = prompts;
+      renderPrompts(prompts);
+      updateMeta(prompts, resolvedDomain);
+      saveHistory(raw, prompts, resolvedDomain);
+      genCount++;
+      localStorage.setItem(CNT_KEY, genCount);
+      document.getElementById('genCount').textContent = genCount + ' run' + (genCount !== 1 ? 's' : '');
+
+      document.getElementById('outputPanel').classList.add('visible');
+      document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch(e) {
+      showToast('Error generating — try again');
+    }
+    setLoading(false);
+  }, 420);
+};
+
+/* ─── RENDER PROMPTS ─────────────────────────────────────── */
+function renderPrompts(prompts) {
+  const tabs = document.getElementById('aiTabs');
+  const cont = document.getElementById('promptContainer');
+  tabs.innerHTML = '';
+  cont.innerHTML = '';
+  const names = Object.keys(prompts);
+  names.forEach(function(ai, i) {
+    const tab = document.createElement('button');
+    tab.className = 'ai-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = ai;
+    tab.addEventListener('click', function() { switchTab(ai); });
+    tabs.appendChild(tab);
+
+    const card = document.createElement('div');
+    card.className = 'prompt-card' + (i === 0 ? ' active' : '');
+    card.id = 'pc-' + ai;
+    const box = document.createElement('div');
+    box.className = 'prompt-box';
+    box.id = 'pb-' + ai;
+    box.textContent = prompts[ai];
+    card.appendChild(box);
+    cont.appendChild(card);
+  });
+}
+
+function switchTab(ai) {
+  document.querySelectorAll('.ai-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.prompt-card').forEach(function(c) { c.classList.remove('active'); });
+  const names = Object.keys(lastOut);
+  const idx = names.indexOf(ai);
+  if (idx >= 0) {
+    document.querySelectorAll('.ai-tab')[idx].classList.add('active');
+    document.getElementById('pc-' + ai).classList.add('active');
+  }
+}
+
+function getActiveText() {
+  const active = document.querySelector('.prompt-card.active .prompt-box');
+  return active ? active.textContent.trim() : '';
+}
+
+function updateMeta(prompts, resolvedDomain) {
+  const words = Object.values(prompts).reduce(function(s,t) {
+    return s + t.split(/\s+/).filter(Boolean).length;
+  }, 0);
+  const ch = document.getElementById('metaChips');
+  ch.innerHTML = '';
+  [resolvedDomain, level, words + ' words'].forEach(function(t) {
+    const s = document.createElement('span');
+    s.className = 'mc';
+    s.textContent = t;
+    ch.appendChild(s);
+  });
+}
+
+/* ─── HISTORY ────────────────────────────────────────────── */
+function getHist() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; }
+}
+
+function saveHistory(input, prompts, dom) {
+  const h = getHist();
+  h.unshift({ id: Date.now(), input: input.slice(0, 90), prompts: prompts, domain: dom, level: level, date: new Date().toLocaleDateString('en-IN') });
+  localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(0, 20)));
+  renderHistory();
+}
+
+function renderHistory() {
+  const h = getHist();
+  const list = document.getElementById('histList');
+  const empty = document.getElementById('histEmpty');
+  list.querySelectorAll('.hist-item').forEach(function(e) { e.remove(); });
+  if (!h.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  h.forEach(function(item) {
+    const div = document.createElement('div');
+    div.className = 'hist-item';
+    div.innerHTML = '<div class="hist-meta"><span class="hist-chip">' + item.domain + '</span><span>' + item.date + '</span></div>' +
+      '<div class="hist-text">' + escHtml(item.input) + '</div>' +
+      '<button class="hist-del" onclick="event.stopPropagation();delHist(' + item.id + ')">✕</button>';
+    div.addEventListener('click', function() { loadHist(item); });
+    list.appendChild(div);
+  });
+}
+
+function loadHist(item) {
+  document.getElementById('rawInput').value = item.input;
+  updateChar(item.input.length);
+  setDomainVal(item.domain);
+  setLevelVal(item.level);
+  lastOut = item.prompts;
+  renderPrompts(item.prompts);
+  updateMeta(item.prompts, item.domain);
+  document.getElementById('outputPanel').classList.add('visible');
+  closeSidebar();
+  document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth' });
+}
+
+window.delHist = function(id) {
+  const h = getHist().filter(function(i) { return i.id !== id; });
+  localStorage.setItem(HIST_KEY, JSON.stringify(h));
+  renderHistory();
+};
+
+window.clearHistory = function() {
+  if (!confirm('Clear all prompt history?')) return;
+  localStorage.removeItem(HIST_KEY);
+  renderHistory();
+};
+
+/* ─── CHIP HELPERS ───────────────────────────────────────── */
+function setDomainVal(val) {
+  document.querySelectorAll('#domainGroup .chip').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.val === val);
+  });
+  domain = val;
+}
+
+function setLevelVal(val) {
+  document.querySelectorAll('#levelGroup .chip').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.val === val);
+  });
+  level = val;
+}
+
+/* ─── INIT ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Theme
+  var saved = localStorage.getItem(THEME_KEY) || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').textContent = saved === 'light' ? '☀️' : '🌙';
+
+  // Gen count
+  document.getElementById('genCount').textContent = genCount + ' run' + (genCount !== 1 ? 's' : '');
+
+  // Textarea char count
+  var ta = document.getElementById('rawInput');
+  ta.addEventListener('input', function() { updateChar(ta.value.length); });
+
+  // Domain chips
+  document.querySelectorAll('#domainGroup .chip').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#domainGroup .chip').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      domain = btn.dataset.val;
+    });
   });
 
-  function detectDomain(input) {
-    const lowerInput = input.toLowerCase();
-    const domainKeywords = {
-      'Coding': ['code', 'program', 'script', 'function', 'api', 'database', 'algorithm', 'debug', 'compile', 'framework', 'library', 'python', 'javascript', 'java', 'c++', 'html', 'css', 'react', 'node', 'git'],
-      'Writing': ['write', 'article', 'story', 'essay', 'blog', 'content', 'copy', 'edit', 'grammar', 'creative', 'narrative', 'poem', 'letter', 'email', 'report'],
-      'Design': ['design', 'ui', 'ux', 'graphic', 'logo', 'color', 'layout', 'wireframe', 'mockup', 'photoshop', 'illustrator', 'figma', 'sketch'],
-      'Business': ['business', 'strategy', 'marketing', 'sales', 'finance', 'plan', 'startup', 'entrepreneur', 'management', 'analysis', 'market', 'customer'],
-      'Cybersecurity': ['security', 'hack', 'vulnerability', 'encryption', 'firewall', 'penetration', 'malware', 'threat', 'privacy', 'authentication', 'owasp'],
-      'Blockchain': ['blockchain', 'crypto', 'bitcoin', 'ethereum', 'smart contract', 'nft', 'defi', 'wallet', 'mining', 'consensus'],
-      'Research': ['research', 'study', 'analyze', 'data', 'experiment', 'hypothesis', 'methodology', 'literature', 'findings', 'conclusion'],
-      'Problem-Solving': ['problem', 'solve', 'fix', 'troubleshoot', 'issue', 'error', 'optimize', 'improve', 'challenge', 'solution']
-    };
-    
-    let bestDomain = 'Coding'; // default
-    let maxMatches = 0;
-    
-    for (const [domain, keywords] of Object.entries(domainKeywords)) {
-      const matches = keywords.filter(keyword => lowerInput.includes(keyword)).length;
-      if (matches > maxMatches) {
-        maxMatches = matches;
-        bestDomain = domain;
-      }
-    }
-    
-    return bestDomain;
-  }
-
-  function initChipGroups() {
-    document.querySelectorAll('#domainGroup .chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#domainGroup .chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedDomain = btn.dataset.val;
-      });
+  // Level chips
+  document.querySelectorAll('#levelGroup .chip').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#levelGroup .chip').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      level = btn.dataset.val;
     });
-    document.querySelectorAll('#levelGroup .chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#levelGroup .chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedLevel = btn.dataset.val;
-      });
+  });
+
+  // AI chips (multi-select)
+  document.querySelectorAll('#aiGroup .chip').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btn.classList.toggle('active');
+      var active = Array.from(document.querySelectorAll('#aiGroup .chip.active')).map(function(b) { return b.dataset.val; });
+      if (active.length === 0) { btn.classList.add('active'); active = [btn.dataset.val]; }
+      selAIs = active;
     });
-    document.querySelectorAll('#tokenGroup .chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#tokenGroup .chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedTokens = parseInt(btn.dataset.val);
-      });
+  });
+
+  // Mode selector
+  document.querySelectorAll('#modeGroup .mode-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#modeGroup .mode-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+      var box = document.getElementById('customBox');
+      box.style.display = mode === 'custom' ? 'block' : 'none';
     });
-    document.querySelectorAll('#aiGroup .chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.classList.toggle('active');
-        selectedAIs = Array.from(document.querySelectorAll('#aiGroup .chip.active')).map(b => b.dataset.val);
-        if (selectedAIs.length === 0) {
-          // Ensure at least one AI is selected
-          btn.classList.add('active');
-          selectedAIs = [btn.dataset.val];
-        }
-      });
+  });
+
+  document.getElementById('customInstruction').addEventListener('input', function(e) {
+    custInst = e.target.value;
+  });
+
+  // Examples
+  document.querySelectorAll('.ex-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var inp = card.dataset.input;
+      document.getElementById('rawInput').value = inp;
+      updateChar(inp.length);
+      setDomainVal(card.dataset.domain);
+      setLevelVal(card.dataset.level);
     });
-  }
-
-  function initExamples() {
-    document.querySelectorAll('.ex-card').forEach(card => {
-      card.addEventListener('click', () => {
-        document.getElementById('rawInput').value = card.dataset.input;
-        updateCharCount(card.dataset.input.length);
-        setDomain(card.dataset.domain);
-        setLevel(card.dataset.level);
-        selectedTokens = parseInt(card.dataset.tokens || 1000);
-        document.querySelectorAll('#tokenGroup .chip').forEach(b => {
-          b.classList.toggle('active', b.dataset.val === card.dataset.tokens);
-        });
-        document.getElementById('rawInput').focus();
-      });
-    });
-  }
-
-  function setDomain(val) {
-    document.querySelectorAll('#domainGroup .chip').forEach(b => b.classList.toggle('active', b.dataset.val === val));
-    selectedDomain = val;
-  }
-
-  function setLevel(val) {
-    document.querySelectorAll('#levelGroup .chip').forEach(b => b.classList.toggle('active', b.dataset.val === val));
-    selectedLevel = val;
-  }
-
-  function initTextarea() {
-    const ta = document.getElementById('rawInput');
-    if (!ta) return;
-    ta.addEventListener('input', () => {
-      updateCharCount(ta.value.length);
-      const detected = detectDomain(ta.value);
-      if (detected !== selectedDomain) {
-        setDomain(detected);
-      }
-    });
-    updateCharCount(ta.value.length);
-  }
-
-  function updateCharCount(len) {
-    const el = document.getElementById('charCount');
-    el.textContent = `${len} / 800`;
-    el.classList.toggle('warn', len > 700);
-  }
-
-  function initKeyboard() {
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (!isGenerating) generatePrompt(); }
-      if (e.key === 'Escape') closeSidebar();
-    });
-  }
-
-  function initButtons() {
-    const genBtn = document.getElementById('genBtn');
-    if (genBtn) genBtn.addEventListener('click', () => { if (!isGenerating) generatePrompt(); });
-
-    const copyBtn = document.getElementById('copyBtn');
-    if (copyBtn) copyBtn.addEventListener('click', copyPrompt);
-
-    const downloadBtn = document.getElementById('downloadBtn');
-    if (downloadBtn) downloadBtn.addEventListener('click', downloadPrompt);
-
-    const regenBtn = document.getElementById('regenerateBtn');
-    if (regenBtn) regenBtn.addEventListener('click', () => { if (!isGenerating) generatePrompt(); });
-
-    const useChatBtn = document.getElementById('useChatBtn');
-    if (useChatBtn) useChatBtn.addEventListener('click', () => {
-      const promptText = getActivePromptText();
-      if (!promptText) return;
-      if (typeof sendPrompt === 'function') {
-        sendPrompt(promptText);
-      } else {
-        navigator.clipboard.writeText(promptText).then(() => {
-          showToast('Prompt copied — paste it into your chat!');
-        }).catch(() => {
-          copyPrompt();
-        });
-      }
-    });
-
-    const themeBtn = document.getElementById('themeBtn');
-    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
-
-    const menuBtn = document.getElementById('menuBtn');
-    if (menuBtn) menuBtn.addEventListener('click', toggleSidebar);
-  }
-
-  // ─── GENERATE (Gemini API) ───────────────────────────────────────────────
-  async function generatePrompt() {
-    const raw = document.getElementById('rawInput').value.trim();
-    if (!raw) { showError('Please describe what you want to achieve first.'); return; }
-    if (raw.length < 5) { showError('Input too short — add more detail for a better prompt.'); return; }
-
-    hideError();
-    setLoading(true);
-    document.getElementById('outputPanel').classList.remove('visible');
-    document.getElementById('statusDot').classList.add('pulsing');
-
-    const systemPrompt = buildSystemPrompt();
-    const userMessage = `Raw input: "${raw}"\nDomain: ${selectedDomain}\nComplexity level: ${selectedLevel}\nTarget AIs: ${selectedAIs.join(', ')}\n\nGenerate optimized FCM prompts for each target AI. Output ONLY the prompts, nothing else.`;
-
-    const GEMINI_API_KEY = 'AIzaSyCTYCEvMtY5XTK201UUHEA5hsSc_MRxNH0'; // Replace with your actual Gemini API key
-    const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
-
-    try {
-      const res = await fetch(GEMINI_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: userMessage }] }],
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { maxOutputTokens: selectedTokens, temperature: 0.7 }
-        })
-      });
-
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try { const err = await res.json(); msg = err.error?.message || msg; } catch {}
-        // Fallback: generate a structured prompt locally if API fails
-        const fallback = generateFallbackPrompt(raw);
-        const prompts = parsePrompts(fallback);
-        lastPrompts = prompts;
-        await renderPrompts(prompts);
-        updateMetaForMultiple(prompts);
-        saveToHistory(raw, prompts);
-        updateGenCount();
-        document.getElementById('outputPanel').classList.add('visible');
-        document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        showToast(`API unavailable (${msg}) — showing local prompt`);
-        setLoading(false);
-        document.getElementById('statusDot').classList.remove('pulsing');
-        return;
-      }
-
-      const data = await res.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-
-      if (!text) {
-        const fallback = generateFallbackPrompt(raw);
-        const prompts = parsePrompts(fallback);
-        lastPrompts = prompts;
-        await renderPrompts(prompts);
-        updateMetaForMultiple(prompts);
-        saveToHistory(raw, prompts);
-        updateGenCount();
-        document.getElementById('outputPanel').classList.add('visible');
-        document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        showToast('Empty API response — showing local prompt');
-        setLoading(false);
-        document.getElementById('statusDot').classList.remove('pulsing');
-        return;
-      }
-
-      const prompts = parsePrompts(text);
-      lastPrompts = prompts;
-      await renderPrompts(prompts);
-      updateMetaForMultiple(prompts);
-      saveToHistory(raw, prompts);
-      updateGenCount();
-      document.getElementById('outputPanel').classList.add('visible');
-      document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    } catch (e) {
-      // Network error — use fallback local generator
-      const fallback = generateFallbackPrompt(raw);
-      const prompts = parsePrompts(fallback);
-      lastPrompts = prompts;
-      await renderPrompts(prompts);
-      updateMetaForMultiple(prompts);
-      saveToHistory(raw, prompts);
-      updateGenCount();
-      document.getElementById('outputPanel').classList.add('visible');
-      document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      showToast('Offline mode — local prompt generated');
-    }
-
-    setLoading(false);
-    document.getElementById('statusDot').classList.remove('pulsing');
-  }
-
-  function generateFallbackPrompt(raw) {
-    const aiList = selectedAIs.length ? selectedAIs : ['Claude'];
-    return aiList.map(ai => `=== ${ai} ===
-ROLE
-You are a world-class ${selectedDomain} expert and specialist with deep practical experience.
-
-OBJECTIVE
-${raw.charAt(0).toUpperCase() + raw.slice(1).replace(/[.!?]?$/, '.')}
-
-CONTEXT
-This task involves ${selectedDomain.toLowerCase()} work at a ${selectedLevel} level. The goal is to produce a precise, actionable, and high-quality result that meets real-world standards. No assumptions should be made without explicit confirmation.
-
-CONSTRAINTS
-- Strictly follow the objective without scope creep
-- Use only verified, well-established approaches
-- Produce output that is complete and production-ready
-- State all assumptions explicitly before starting
-- Validate all steps for correctness before responding
-
-EXECUTION PLAN
-1. Analyze: Carefully read and decompose the objective into its core requirements
-2. Plan: Outline a clear, logical approach to address all requirements
-3. Execute: Implement the solution with precision and thoroughness
-4. Verify: Review output for completeness, correctness, and quality before final delivery
-
-OUTPUT FORMAT
-Provide a well-structured response with clear section headings. Use code blocks for any code, bullet points for lists, and tables where comparison is needed. Approximate length: ${selectedTokens > 1000 ? 'comprehensive (800–1200 words)' : 'concise (400–700 words)'}.
-
-QUALITY RULES
-- No vague language, filler, or generic placeholders
-- State ALL assumptions explicitly before starting
-- If any detail is uncertain, say so clearly — do NOT fabricate
-- Validate logical consistency before final output
-- Tailor every sentence to this specific ${selectedDomain} context
-
-REALISM LAYER
-A senior ${selectedDomain} professional would consider edge cases, maintainability, performance constraints, and real-world tradeoffs. Approach this with that same level of diligence — not textbook theory, but battle-tested practice.`).join('\n\n');
-  }
-
-  function parsePrompts(text) {
-    const prompts = {};
-    const parts = text.split(/^===\s*(.+?)\s*===$/gm).filter(s => s.trim());
-    for (let i = 0; i < parts.length; i += 2) {
-      const aiName = parts[i].trim();
-      const promptText = (parts[i + 1] || '').trim();
-      if (aiName && promptText) {
-        prompts[aiName] = promptText;
-      }
-    }
-    if (Object.keys(prompts).length === 0) {
-      prompts[selectedAIs[0] || 'Claude'] = text.trim();
-    }
-    return prompts;
-  }
-
-  function buildSystemPrompt() {
-    const levelGuide = {
-      Beginner: 'Use simple language. Keep constraints to 3-4. Execution plan should be straightforward. Output format should be plain text or simple Markdown.',
-      Professional: 'Use domain-specific terminology. 4-5 constraints. Execution plan should include planning and verification. Output format can be structured Markdown.',
-      Expert: 'Use precise technical language. 5-6 strict constraints. Full 4-step execution with edge case analysis. Output can demand structured JSON, tables, typed code, or formal reports.'
-    };
-    
-    const aiOptimizations = {
-      Claude: 'Leverage Claude\'s strength in structured reasoning and analysis. Emphasize step-by-step thinking, clear constraints, and comprehensive execution plans. Use formal, precise language.',
-      ChatGPT: 'Leverage ChatGPT\'s strength in creative and conversational responses. Include engaging, human-like elements, flexible constraints, and adaptive execution. Use natural, flowing language.',
-      Gemini: 'Leverage Gemini\'s multimodal capabilities. Include references to images/diagrams where relevant, structured data formats, and innovative problem-solving approaches. Use modern, concise language.'
-    };
-    
-    const targetAIs = selectedAIs.map(ai => `${ai}: ${aiOptimizations[ai] || 'General optimization'}`).join('\n');
-    
-    return `You are an elite Prompt Architecture Engine operating in Full Capability Mode (FCM).
-Task: Transform raw user input into production-grade, ultra-optimized AI prompts tailored for specific AI models.
-Domain specialization: ${selectedDomain}
-Complexity level: ${selectedLevel}
-Level guidance: ${levelGuide[selectedLevel]}
-
-Target AIs and their optimizations:
-${targetAIs}
-
-For each target AI, generate a complete FCM prompt with 8 sections optimized for that AI's capabilities.
-
-OUTPUT FORMAT:
-=== AI_NAME ===
-[8-section FCM prompt for that AI]
-
-[Repeat for each AI]
-
-REQUIRED FCM STRUCTURE — 8 sections, in this exact order, with these exact headings:
-
-ROLE
-[One precise expert identity sentence, tailored to the AI]
-
-OBJECTIVE
-[One sharp, measurable goal sentence]
-
-CONTEXT
-[2-3 sentences: real-world scenario with specific details from the input]
-
-CONSTRAINTS
-- [Hard rule 1]
-- [Hard rule 2]
-- [Hard rule 3]
-- [Hard rule 4 if needed]
-- [Hard rule 5-6 for Expert level]
-
-EXECUTION PLAN
-1. Analyze: [specific analysis action]
-2. Plan: [specific planning action]
-3. Execute: [specific execution action]
-4. Verify: [self-validation action before responding]
-
-OUTPUT FORMAT
-[Precise description: format type, sections/headings required, approximate length, any tables/code blocks/etc.]
-
-QUALITY RULES
-- No vague language, filler, or generic placeholders
-- State ALL assumptions explicitly before starting
-- If any detail is uncertain, say so clearly — do NOT fabricate
-- Validate logical consistency before final output
-- [1-2 domain-specific quality rules matching ${selectedDomain}]
-
-REALISM LAYER
-[1 concise paragraph: what a senior real-world ${selectedDomain} expert would actually consider]
-
-STRICT OUTPUT RULES:
-- Output ONLY the AI-specific prompts in the format above — zero preamble, zero explanation
-- Each prompt must be tailored to the AI's strengths
-- Every section heading must be present and in ALL CAPS on its own line
-- Be specific to THIS exact input — never write generic filler
-- No hallucinated tools, methods, libraries, or claims`;
-  }
-
-  async function renderPrompts(prompts) {
-    const tabsContainer = document.getElementById('aiTabs');
-    const container = document.getElementById('promptContainer');
-    tabsContainer.innerHTML = '';
-    container.innerHTML = '';
-
-    const aiNames = Object.keys(prompts);
-    if (aiNames.length === 0) return;
-
-    aiNames.forEach((ai, index) => {
-      const tab = document.createElement('button');
-      tab.className = 'ai-tab' + (index === 0 ? ' active' : '');
-      tab.textContent = ai;
-      tab.onclick = () => switchTab(ai);
-      tabsContainer.appendChild(tab);
-
-      const card = document.createElement('div');
-      card.className = 'prompt-card' + (index === 0 ? ' active' : '');
-
-      const header = document.createElement('div');
-      header.className = 'prompt-card-header';
-
-      const title = document.createElement('div');
-      title.className = 'prompt-card-title';
-      title.textContent = ai;
-
-      const copyButton = document.createElement('button');
-      copyButton.className = 'copy-ai-btn';
-      copyButton.type = 'button';
-      copyButton.textContent = 'Copy prompt';
-      copyButton.addEventListener('click', () => copyText(prompts[ai]));
-
-      header.append(title, copyButton);
-      card.appendChild(header);
-
-      const promptDiv = document.createElement('div');
-      promptDiv.className = 'ai-prompt prompt-box' + (index === 0 ? ' active' : '');
-      promptDiv.id = `prompt-${ai}`;
-      card.appendChild(promptDiv);
-      container.appendChild(card);
-
-      streamOutputTo(prompts[ai], promptDiv);
-    });
-  }
-
-  function switchTab(aiName) {
-    document.querySelectorAll('.ai-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.prompt-card').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.ai-prompt').forEach(p => p.classList.remove('active'));
-    const aiNames = Object.keys(lastPrompts);
-    const index = aiNames.indexOf(aiName);
-    if (index >= 0) {
-      const tabs = document.querySelectorAll('.ai-tab');
-      const cards = document.querySelectorAll('.prompt-card');
-      const prompts = document.querySelectorAll('.ai-prompt');
-      if (tabs[index]) tabs[index].classList.add('active');
-      if (cards[index]) cards[index].classList.add('active');
-      if (prompts[index]) prompts[index].classList.add('active');
-    }
-  }
-
-  async function streamOutputTo(text, box) {
-    box.textContent = '';
-    box.innerHTML = '';
-    const cursor = document.createElement('span');
-    cursor.className = 'cursor-blink';
-    box.appendChild(cursor);
-    const chars = text.split('');
-    const BATCH = 4, DELAY = 8;
-    for (let i = 0; i < chars.length; i += BATCH) {
-      const chunk = chars.slice(i, i + BATCH).join('');
-      const progress = Math.min((i / chars.length) * 100, 99);
-      document.getElementById('progressFill').style.width = progress + '%';
-      box.insertBefore(document.createTextNode(chunk), cursor);
-      if (i % 40 === 0) await sleep(DELAY);
-    }
-    cursor.remove();
-    document.getElementById('progressFill').style.width = '100%';
-    applyHighlighting(box, text);
-    setTimeout(() => { document.getElementById('progressFill').style.width = '0%'; }, 800);
-  }
-
-  function applyHighlighting(box, text) {
-    const sections = ['ROLE','OBJECTIVE','CONTEXT','CONSTRAINTS','EXECUTION PLAN','OUTPUT FORMAT','QUALITY RULES','REALISM LAYER'];
-    let html = escapeHtml(text);
-    sections.forEach(s => { html = html.replace(new RegExp(`^(${s})$`, 'gm'), `<span class="hl-section">${s}</span>`); });
-    html = html.replace(/^(\d+\.\s)/gm, '<span class="hl-num">$1</span>');
-    box.innerHTML = html;
-  }
-
-  function escapeHtml(t) {
-    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  function updateMetaForMultiple(prompts) {
-    const totalWords = Object.values(prompts).reduce((sum, text) => sum + text.split(/\s+/).filter(Boolean).length, 0);
-    const sections = ['ROLE','OBJECTIVE','CONTEXT','CONSTRAINTS','EXECUTION PLAN','OUTPUT FORMAT','QUALITY RULES','REALISM LAYER'];
-    const allSections = new Set();
-    Object.values(prompts).forEach(text => {
-      sections.forEach(s => { if (text.includes(s)) allSections.add(s); });
-    });
-    const foundSections = Array.from(allSections);
-    document.getElementById('metaChips').innerHTML = [
-      `<span class="meta-chip">${selectedDomain}</span>`,
-      `<span class="meta-chip">${selectedLevel}</span>`,
-      `<span class="meta-chip">${totalWords} words</span>`,
-      `<span class="meta-chip">${foundSections.length}/8 sections</span>`
-    ].join('');
-    document.getElementById('sectionList').innerHTML =
-      foundSections.map(s => `<span class="sec-pill">${s}</span>`).join('') +
-      sections.filter(s => !foundSections.includes(s)).map(s => `<span class="sec-pill" style="opacity:0.35">${s}</span>`).join('');
-  }
-
-  function getHistory() {
-    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
-  }
-
-  function saveToHistory(input, prompt) {
-    const h = getHistory();
-    h.unshift({ id: Date.now(), input: input.slice(0, 100), prompt, domain: selectedDomain, level: selectedLevel, date: new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' }) });
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 30)));
-    renderHistory();
-  }
-
-  function renderHistory() {
-    const h = getHistory();
-    const list = document.getElementById('historyList');
-    const empty = document.getElementById('historyEmpty');
-    if (h.length === 0) { empty.style.display = 'block'; list.querySelectorAll('.hist-item').forEach(el => el.remove()); return; }
-    empty.style.display = 'none';
-    list.querySelectorAll('.hist-item').forEach(el => el.remove());
-    h.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'hist-item';
-      div.innerHTML = `<div class="hist-item-meta"><span class="hist-chip">${item.domain}</span><span style="color:var(--text3);font-size:10px;">${item.date}</span></div><div class="hist-item-text">${escapeHtml(item.input)}</div><button class="hist-del" aria-label="Delete history item" data-id="${item.id}">✕</button>`;
-      div.addEventListener('click', e => { if (e.target.classList.contains('hist-del')) { deleteHistory(item.id); return; } loadHistory(item); });
-      list.appendChild(div);
-    });
-  }
-
-  function loadHistory(item) {
-    document.getElementById('rawInput').value = item.input;
-    updateCharCount(item.input.length);
-    setDomain(item.domain);
-    setLevel(item.level);
-    const promptData = parseStoredPrompt(item.prompt);
-    lastPrompts = promptData;
-    renderPrompts(promptData);
-    updateMetaForMultiple(promptData);
-    document.getElementById('outputPanel').classList.add('visible');
-    closeSidebar();
-    document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function deleteHistory(id) {
-    const h = getHistory().filter(i => i.id !== id);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
-    renderHistory();
-  }
-
-  function parseStoredPrompt(prompt) {
-    if (typeof prompt !== 'string') return prompt;
-    try {
-      const parsed = JSON.parse(prompt);
-      if (parsed && typeof parsed === 'object') return parsed;
-    } catch {}
-    return parsePrompts(prompt);
-  }
-
-  function clearHistory() {
-    if (!confirm('Clear all history?')) return;
-    localStorage.removeItem(HISTORY_KEY);
-    renderHistory();
-  }
-
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-    if (sidebar.classList.contains('open')) { closeSidebar(); return; }
-    sidebar.classList.add('open');
-    overlay.classList.add('show');
-  }
-
-  function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('overlay').classList.remove('show');
-  }
-
-  function toggleTheme() {
-    const cur = document.documentElement.getAttribute('data-theme');
-    const next = cur === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem(THEME_KEY, next);
-    updateThemeIcon(next);
-  }
-
-  function updateThemeIcon(theme) {
-    const btn = document.getElementById('themeBtn');
-    if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
-  }
-
-  // FIX #3: Removed dead code "btn.querySelector('span') ? null : null"
-  function getActivePromptText() {
-    const activePrompt = document.querySelector('.ai-prompt.active');
-    if (activePrompt) {
-      return activePrompt.textContent.trim();
-    }
-    const firstAi = Object.keys(lastPrompts)[0];
-    return firstAi ? lastPrompts[firstAi] : '';
-  }
-
-  function copyText(text) {
+  });
+
+  // Copy button
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    var text = getActiveText();
+    if (!text) { showToast('No prompt to copy'); return; }
+    navigator.clipboard.writeText(text).then(function() { showToast('✓ Copied to clipboard'); });
+  });
+
+  // Download button
+  document.getElementById('downloadBtn').addEventListener('click', function() {
+    var text = getActiveText();
     if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('Copied to clipboard!');
-    }).catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.cssText = 'position:fixed;opacity:0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      showToast('Copied!');
-    });
-  }
-
-  function copyPrompt() {
-    copyText(getActivePromptText());
-  }
-
-  function downloadPrompt() {
-    const promptText = getActivePromptText();
-    if (!promptText) return;
-    const blob = new Blob([promptText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `fcm_prompt_${selectedDomain.toLowerCase()}_${Date.now()}.txt`;
+    var blob = new Blob([text], { type: 'text/plain' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'fcm_prompt_' + domain + '_' + Date.now() + '.txt';
     a.click();
-    URL.revokeObjectURL(url);
-    showToast('Downloaded!');
-  }
+    showToast('✓ Downloaded');
+  });
 
-  function setLoading(on) {
-    isGenerating = on;
-    const btn = document.getElementById('genBtn');
-    const regen = document.getElementById('regenerateBtn');
-    btn.disabled = on;
-    regen.disabled = on;
-    if (on) {
-      btn.innerHTML = '<div class="spinner"></div>Generating…';
-    } else {
-      btn.innerHTML = `<div class="btn-icon"><svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg></div>Generate Optimized Prompt`;
-    }
-  }
+  // Regenerate button
+  document.getElementById('regenBtn').addEventListener('click', function() {
+    if (!busy) generatePrompt();
+  });
 
-  function showError(msg) {
-    const box = document.getElementById('errorBox');
-    const msgEl = document.getElementById('errorMsg');
-    if (!box || !msgEl) return;
-    msgEl.textContent = msg;
-    box.classList.remove('hidden');
-  }
+  // Keyboard shortcut
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (!busy) generatePrompt(); }
+    if (e.key === 'Escape') closeSidebar();
+  });
 
-  function hideError() {
-    const box = document.getElementById('errorBox');
-    if (!box) return;
-    box.classList.add('hidden');
-  }
+  renderHistory();
+});
 
-  function updateGenCount() {
-    genCount++;
-    localStorage.setItem(COUNT_KEY, genCount);
-    document.getElementById('genCount').textContent = genCount;
-  }
+/* ─── GLOBAL FUNCTIONS ───────────────────────────────────── */
+window.toggleTheme = function() {
+  var btn = document.getElementById('themeBtn');
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem(THEME_KEY, next);
+  btn.textContent = next === 'light' ? '☀️' : '🌙';
+};
 
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    document.getElementById('toastMsg').textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2500);
-  }
+window.toggleSidebar = function() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+};
 
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+window.closeSidebar = function() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+};
+
+/* ─── UTILITIES ──────────────────────────────────────────── */
+function updateChar(len) {
+  document.getElementById('charCount').textContent = len + ' / 800';
+}
+
+function setLoading(val) {
+  busy = val;
+  var btn = document.getElementById('genBtn');
+  btn.disabled = val;
+  btn.innerHTML = val
+    ? '<div class="spinner"></div> Generating...'
+    : '<svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg> Generate God-Level Prompt';
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2600);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+})();
 </script>
 </body>
 </html>
